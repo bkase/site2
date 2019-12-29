@@ -30,19 +30,21 @@ module Style = {
 [@react.component]
 let make = (~children) => {
   <Page>
-    <div className=Style.page>
-      <p>{React.string("Side nav")}</p>
-      <div className=Style.content>
-        <Next.MDXProvider
-          components={
-            "h1": BlogComponents.H1.make,
-            "h2": BlogComponents.H2.make,
-          }>
-          children
-        </Next.MDXProvider>
+
+      <div className=Style.page>
+        <p> {React.string("Side nav")} </p>
+        <div className=Style.content>
+          <Next.MDXProvider
+            components={
+              "h1": BlogComponents.H1.make,
+              "h2": BlogComponents.H2.make,
+            }>
+            children
+          </Next.MDXProvider>
+        </div>
       </div>
-    </div>
-  </Page>;
+    </Page>;
+    // let router = Next.Router.useRouter();
 };
 
 let default = make;

@@ -13,11 +13,7 @@ module Wrap = (C: Component) => {
 open Css;
 
 let headerStyle =
-  style([
-    display(`flex),
-    marginTop(rem(2.)),
-    marginBottom(`rem(0.5))
-  ]);
+  style([display(`flex), marginTop(rem(2.)), marginBottom(`rem(0.5))]);
 
 module H1 =
   Wrap({
@@ -38,4 +34,3 @@ module H2 =
       ]);
     let element = <h2 className />;
   });
-
