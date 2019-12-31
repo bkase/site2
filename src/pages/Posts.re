@@ -1,29 +1,57 @@
 // This is the layout for the docs MDX pages
 
+open Style;
+
 module Style = {
   open Css;
 
+  let () =
+    global(
+      "html",
+      [
+        fontSize(`percent(120.)),
+        media(MediaQuery.tablet, [fontSize(`percent(100.))]),
+      ],
+    );
+
   let content =
     style([
-      maxWidth(`rem(43.)),
-      marginLeft(`rem(1.)),
-      selector(
-        "p > code, li > code",
+      media(
+        MediaQuery.extraLarge,
         [
-          boxSizing(`borderBox),
-          padding2(~v=`px(2), ~h=`px(6)),
-          borderRadius(`px(4)),
+          maxWidth(`rem(56.625)),
+          marginLeft(`rem(5.75)),
+          marginRight(`rem(4.875)),
         ],
       ),
     ]);
 
   let page =
     style([
-      display(`block),
-      justifyContent(`center),
+      maxWidth(`rem(56.625)),
       margin(`auto),
-      marginTop(`rem(4.)),
-      padding2(~v=`zero, ~h=`rem(2.)),
+      paddingLeft(`rem(1.5)),
+      paddingRight(`rem(1.5)),
+      media(
+        MediaQuery.tablet,
+        [paddingLeft(`rem(2.375)), paddingRight(`rem(2.375))],
+      ),
+      media(
+        MediaQuery.extraLarge,
+        [
+          maxWidth(`vw(100.)),
+          display(`flex),
+          marginTop(`rem(6.)),
+          paddingLeft(`zero),
+          paddingRight(`zero),
+        ],
+      ),
+    ]);
+
+  let sideNav =
+    style([
+      media(MediaQuery.tablet, []),
+      media(MediaQuery.extraLarge, [width(`rem(17.))]),
     ]);
 };
 
@@ -32,12 +60,15 @@ let make = (~children) => {
   <Page>
 
       <div className=Style.page>
-        <p> {React.string("Side nav")} </p>
+        <div className=Style.sideNav>
+          <SideNav topLink="BLOG" links=["BKASE", "VIDEOS", "PROJS"] />
+        </div>
         <div className=Style.content>
           <Next.MDXProvider
             components={
               "h1": BlogComponents.H1.make,
               "h2": BlogComponents.H2.make,
+              "p": BlogComponents.P.make,
             }>
             children
           </Next.MDXProvider>

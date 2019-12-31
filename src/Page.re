@@ -6,6 +6,7 @@ let make = (~children) => {
         href="https://cdn.jsdelivr.net/npm/@ibm/plex@4.0.2/css/ibm-plex.min.css"
         rel="stylesheet"
       />
+      <link href="/static/reset.css" rel="stylesheet" />
     </Next.Head>
     <div> children </div>
   </>;
