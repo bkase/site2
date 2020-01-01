@@ -68,5 +68,5 @@ module Colors = {
 module MediaQuery = {
   let extraLarge = "(min-width: 75rem)";
   let tablet = "(min-width: 49.75rem)";
-  let flexMobileSwitch = "(min-width: 36.5rem)";
+  let halfTablet = "(min-width: 36.5rem)";
 };

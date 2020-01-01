@@ -15,7 +15,21 @@ module Style = {
       ),
     ]);
 
-  let topLink = merge([linkBase, style([color(Colors.navy(1.0))])]);
+  let topLink = hideOnLarge =>
+    merge([
+      linkBase,
+      style([
+        color(Colors.navy(1.0)),
+        ...if (hideOnLarge) {
+             [
+               display(`block),
+               media(MediaQuery.extraLarge, [display(`none)]),
+             ];
+           } else {
+             [];
+           },
+      ]),
+    ]);
 
   let otherLink = merge([linkBase, style([color(Colors.navy(0.25))])]);
 
@@ -40,19 +54,33 @@ module Style = {
 
   let growOnSwitch =
     style([
-      flexBasis(`percent(40.)),
-      media(MediaQuery.flexMobileSwitch, [flexBasis(`auto)]),
+      flexBasis(`percent(50.)),
+      media(MediaQuery.halfTablet, [flexBasis(`auto)]),
     ]);
+};
+
+let unpage = x =>
+  switch (x) {
+  | `Home => "BKASE"
+  | `Blog => "BLOG"
+  | `Videos => "VIDEOS"
+  | `Projs => "PROJS"
+  };
+
+let otherPages = page => {
+  let x = Option.value(page, ~default=`Home);
+  [`Home, `Blog, `Videos, `Projs] |> List.filter(x' => x != x');
 };
 
 let curry = (f, x, y) => f((x, y));
 
 [@react.component]
-let make = (~topLink, ~links) => {
+let make = (~topLink) => {
   <ul className=Style.list>
     {ReasonReact.array(
-       {let bottomLis =
-          links
+       {let bottomList =
+          otherPages(topLink)
+          |> List.map(unpage)
           |> List.mapi((i, link) =>
                <li
                  className=Css.(
@@ -68,12 +96,19 @@ let make = (~topLink, ~links) => {
                  {ReasonReact.string(link)}
                </li>
              );
-        [
-          <li className=Css.(merge([Style.topLink, Style.growOnSwitch]))>
-            {ReasonReact.string(topLink)}
-          </li>,
-          ...bottomLis,
-        ]
+        {let topResolve = Option.value(topLink, ~default=`Home);
+         [
+           <li
+             className=Css.(
+               merge([
+                 Style.topLink(Option.is_none(topLink)),
+                 Style.growOnSwitch,
+               ])
+             )>
+             {ReasonReact.string(unpage(topResolve))}
+           </li>,
+           ...bottomList,
+         ]}
         |> Array.of_list},
      )}
   </ul>;

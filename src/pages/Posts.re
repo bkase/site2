@@ -47,12 +47,6 @@ module Style = {
         ],
       ),
     ]);
-
-  let sideNav =
-    style([
-      media(MediaQuery.tablet, []),
-      media(MediaQuery.extraLarge, [width(`rem(17.))]),
-    ]);
 };
 
 [@react.component]
@@ -60,15 +54,14 @@ let make = (~children) => {
   <Page>
 
       <div className=Style.page>
-        <div className=Style.sideNav>
-          <SideNav topLink="BLOG" links=["BKASE", "VIDEOS", "PROJS"] />
-        </div>
+        <Nav topLink={Some(`Blog)} />
         <div className=Style.content>
           <Next.MDXProvider
             components={
               "h1": BlogComponents.H1.make,
               "h2": BlogComponents.H2.make,
               "p": BlogComponents.P.make,
+              "a": BlogComponents.A.make,
             }>
             children
           </Next.MDXProvider>
