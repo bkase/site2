@@ -86,7 +86,11 @@ module P = {
 
 module A = {
   include Wrap({
-    let className = merge([bodyStyle, style([color(`hex("1B998B"))])]);
+    let className =
+      merge([
+        bodyStyle,
+        style([color(Style.Colors.green), hover([textDecoration(`none)])]),
+      ]);
     let element = <a className />;
   });
 

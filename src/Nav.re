@@ -39,7 +39,7 @@ module Style = {
       justifyContent(`spaceBetween),
       lineHeight(`abs(1.0)),
       flexWrap(`wrap),
-      marginTop(`rem(3.)),
+      paddingTop(`rem(3.)),
       marginBottom(`rem(1.5)),
       media(MediaQuery.tablet, [flexWrap(`nowrap), marginBottom(`zero)]),
       media(
@@ -47,7 +47,7 @@ module Style = {
         [
           display(`block),
           marginLeft(`rem(4.875)),
-          marginTop(`rem(2.125)),
+          paddingTop(`rem(2.125)),
         ],
       ),
     ]);
@@ -56,6 +56,13 @@ module Style = {
     style([
       flexBasis(`percent(50.)),
       media(MediaQuery.halfTablet, [flexBasis(`auto)]),
+    ]);
+
+  let navLink =
+    style([
+      color(Colors.navy(0.25)),
+      textDecoration(`none),
+      hover([color(Colors.green)]),
     ]);
 };
 
@@ -72,6 +79,15 @@ let otherPages = page => {
   [`Home, `Blog, `Videos, `Projs] |> List.filter(x' => x != x');
 };
 
+let href = page => {
+  switch (page) {
+  | `Home => Links.home
+  | `Blog => Links.blog
+  | `Videos => Links.video
+  | `Projs => Links.projs
+  };
+};
+
 let curry = (f, x, y) => f((x, y));
 
 [@react.component]
@@ -80,7 +96,6 @@ let make = (~topLink) => {
     {ReasonReact.array(
        {let bottomList =
           otherPages(topLink)
-          |> List.map(unpage)
           |> List.mapi((i, link) =>
                <li
                  className=Css.(
@@ -93,7 +108,9 @@ let make = (~topLink) => {
                         },
                    ])
                  )>
-                 {ReasonReact.string(link)}
+                 <a className=Style.navLink href={href(link)}>
+                   {ReasonReact.string(unpage(link))}
+                 </a>
                </li>
              );
         {let topResolve = Option.value(topLink, ~default=`Home);

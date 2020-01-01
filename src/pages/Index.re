@@ -86,10 +86,25 @@ module P = BlogComponents.P.R;
 module A = BlogComponents.A.R;
 module H1 = BlogComponents.H1.R;
 
+let () =
+  Css.(
+    global(
+      "body",
+      [overflow(`hidden), width(`percent(100.)), height(`percent(100.))],
+    )
+  );
+
 [@react.component]
 let make = () => {
   <Page>
-    <div className=Css.(style([height(`vh(100.))]))>
+    <div
+      className=Css.(
+        style([
+          height(`percent(100.)),
+          width(`percent(100.)),
+          overflow(`hidden),
+        ])
+      )>
       <div
         className=Css.(
           merge([
@@ -144,7 +159,7 @@ let make = () => {
           <P className=Style.innerP>
             {s("Occasionally, I update a ")}
             <A href="/static/resume.pdf"> {s("resume")} </A>
-            {s(".")}
+            {s(". Though, I currently haven't in the past four years.")}
           </P>
         </div>
       </div>

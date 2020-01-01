@@ -63,6 +63,7 @@ module Sizes = {
 module Colors = {
   let navy = alpha => `rgba((1, 4, 62, alpha));
   let black = `hex("000219");
+  let green = `hex("1B998B");
 };
 
 module MediaQuery = {
