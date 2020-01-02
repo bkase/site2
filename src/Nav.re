@@ -96,8 +96,10 @@ let make = (~topLink) => {
     {ReasonReact.array(
        {let bottomList =
           otherPages(topLink)
-          |> List.mapi((i, link) =>
+          |> List.mapi((i, link) => {
+               let unpagedLink = unpage(link);
                <li
+                 key=unpagedLink
                  className=Css.(
                    merge([
                      Style.otherLink,
@@ -109,21 +111,23 @@ let make = (~topLink) => {
                    ])
                  )>
                  <a className=Style.navLink href={href(link)}>
-                   {ReasonReact.string(unpage(link))}
+                   {ReasonReact.string(unpagedLink)}
                  </a>
-               </li>
-             );
+               </li>;
+             });
         {let topResolve = Option.value(topLink, ~default=`Home);
          [
-           <li
-             className=Css.(
-               merge([
-                 Style.topLink(Option.is_none(topLink)),
-                 Style.growOnSwitch,
-               ])
-             )>
-             {ReasonReact.string(unpage(topResolve))}
-           </li>,
+           {let unpagedLink = unpage(topResolve);
+            <li
+              key=unpagedLink
+              className=Css.(
+                merge([
+                  Style.topLink(Option.is_none(topLink)),
+                  Style.growOnSwitch,
+                ])
+              )>
+              {ReasonReact.string(unpagedLink)}
+            </li>},
            ...bottomList,
          ]}
         |> Array.of_list},

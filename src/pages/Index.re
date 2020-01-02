@@ -138,7 +138,7 @@ let make = () => {
         </div>
         <div className=Style.body>
           <P className=Css.(style([Style.extraPMarginBottom]))>
-            {s("Head of product engineering at o(1) labs building the ")}
+            {s("Head of product engineering at o(1) labs, building the ")}
             <A href="https://codaprotocol.com"> {s("coda protocol")} </A>
             {s(".")}
           </P>
@@ -153,13 +153,8 @@ let make = () => {
             {s(". I use ")}
             <A href="https://github.com/bkase"> {s("github")} </A>
             {s(" to build stuff on the side. In theory, there will be ")}
-            <A href="/posts"> {s("blog")} </A>
+            <A href="/posts/sample"> {s("blog")} </A>
             {s(" posts.")}
-          </P>
-          <P className=Style.innerP>
-            {s("Occasionally, I update a ")}
-            <A href="/static/resume.pdf"> {s("resume")} </A>
-            {s(". Though, I currently haven't in the past four years.")}
           </P>
         </div>
       </div>

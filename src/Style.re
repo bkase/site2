@@ -3,40 +3,46 @@ module Typeface: {
   let arame: Css.rule;
   let futura: Css.rule;
 } = {
-  let labels = [
-    (`bold, `italic, "Bold Italic"),
-    (`normal, `italic, "Italic"),
-    (`normal, `normal, "Regular"),
-    (`bold, `normal, "Bold"),
-  ];
+  // fonts load via side-effect
+  let _pragmataPro: unit =
+    Css.(
+      global(
+        "@font-face",
+        [
+          fontFamily("PragmataPro"),
+          unsafe(
+            "src",
+            {|
+        local('PragmataPro'),
+        url('/static/fonts/essential-pragmatapro/EssentialPro.woff2') format('woff2'),
+        url('/static/fonts/essential-pragmatapro/EssentialPro.woff') format('woff');
+        |},
+          ),
+          fontWeight(`normal),
+          fontStyle(`normal),
+        ],
+      )
+    );
 
-  let () = {
-    // fonts load via side-effect
-    let _face: list(string) =
-      labels
-      |> List.map(((weight, style, suffix)) =>
-           Css.fontFace(
-             ~fontFamily="PragmataPro",
-             ~src=[
-               `localUrl("PragmataPro " ++ suffix),
-               `localUrl("PragmataPro-" ++ suffix),
-             ],
-             ~fontWeight=weight,
-             ~fontStyle=style,
-             (),
-           )
-         );
-
-    ();
-  };
-
-  let _arame: string =
-    Css.fontFace(
-      ~fontFamily="0Arame",
-      ~src=[`localUrl("Arame-Regular")],
-      ~fontWeight=`normal,
-      ~fontStyle=`normal,
-      (),
+  let _arame: unit =
+    // bs-css font face doesn't support woff and woff2 annotations
+    Css.(
+      global(
+        "@font-face",
+        [
+          fontFamily("0Arame"),
+          unsafe(
+            "src",
+            {|
+        local('Arame-Regular'),
+        url('/static/fonts/arame/Arame-Regular.woff2') format('woff2'),
+        url('/static/fonts/arame/Arame-Regular.woff') format('woff');
+        |},
+          ),
+          fontWeight(`normal),
+          fontStyle(`normal),
+        ],
+      )
     );
 
   let pragmata = Css.fontFamily("PragmataPro, \"Courier New\", monospace");
