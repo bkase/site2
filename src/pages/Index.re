@@ -54,9 +54,9 @@ module Style = {
       zIndex(-1),
       opacity(0.7),
       position(`absolute),
-      bottom(`px(-258)),
-      left(`px(76)),
-      width(`px(628)),
+      bottom(`px(-240)),
+      left(`px(100)),
+      width(`px(558)),
       media(
         MediaQuery.halfTablet,
         [width(`px(760)), left(`px(200)), bottom(`px(-313))],
@@ -71,9 +71,16 @@ module Style = {
 
   let extraPMarginBottom = marginBottom(`rem(2.5));
 
+  let topP =
+    style([
+      extraPMarginBottom,
+      media(MediaQuery.halfTablet, [maxWidth(`rem(20.))]),
+      media(MediaQuery.tablet, [maxWidth(`none)]),
+    ]);
+
   let innerP =
     style([
-      maxWidth(`rem(12.5)),
+      maxWidth(`rem(13.75)),
       extraPMarginBottom,
       media(MediaQuery.halfTablet, [maxWidth(`rem(20.))]),
       media(MediaQuery.tablet, [maxWidth(`none)]),
@@ -120,8 +127,8 @@ let make = () => {
       <div className=Style.content>
         <img
           className=Style.img
-          src="static/Brandon_kase.jpg"
-          srcSet="static/Brandon_kase@2x.jpg 2x"
+          src="/static/Brandon_kase.jpg"
+          srcSet="/static/Brandon_kase@2x.jpg 2x"
         />
         <Nav topLink=None />
         <div
@@ -137,7 +144,7 @@ let make = () => {
           <H1> {s("Brandon Kase")} </H1>
         </div>
         <div className=Style.body>
-          <P className=Css.(style([Style.extraPMarginBottom]))>
+          <P className=Style.topP>
             {s("Head of product engineering at o(1) labs, building the ")}
             <A href="https://codaprotocol.com"> {s("coda protocol")} </A>
             {s(".")}
@@ -154,7 +161,7 @@ let make = () => {
             <A href="https://github.com/bkase"> {s("github")} </A>
             {s(" to build stuff on the side. In theory, there will be ")}
             <A href="/posts/sample"> {s("blog")} </A>
-            {s(" posts.")}
+            {s({j|\u00A0posts.|j})}
           </P>
         </div>
       </div>

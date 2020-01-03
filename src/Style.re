@@ -3,6 +3,28 @@ module Typeface: {
   let arame: Css.rule;
   let futura: Css.rule;
 } = {
+  let _arame: unit =
+    // bs-css font face doesn't support woff and woff2 annotations
+    Css.(
+      global(
+        "@font-face",
+        [
+          fontFamily("Arame"),
+          unsafe(
+            "src",
+            {|
+        local('Arame-Regular'),
+        url('/static/fonts/arame/ArameRegular.woff2') format('woff2'),
+        url('/static/fonts/arame/ArameRegular.woff') format('woff'),
+        url('/static/fonts/arame/ArameRegular.ttf') format('truetype');
+        |},
+          ),
+          fontWeight(`normal),
+          fontStyle(`normal),
+        ],
+      )
+    );
+
   // fonts load via side-effect
   let _pragmataPro: unit =
     Css.(
@@ -24,29 +46,8 @@ module Typeface: {
       )
     );
 
-  let _arame: unit =
-    // bs-css font face doesn't support woff and woff2 annotations
-    Css.(
-      global(
-        "@font-face",
-        [
-          fontFamily("0Arame"),
-          unsafe(
-            "src",
-            {|
-        local('Arame-Regular'),
-        url('/static/fonts/arame/Arame-Regular.woff2') format('woff2'),
-        url('/static/fonts/arame/Arame-Regular.woff') format('woff');
-        |},
-          ),
-          fontWeight(`normal),
-          fontStyle(`normal),
-        ],
-      )
-    );
-
   let pragmata = Css.fontFamily("PragmataPro, \"Courier New\", monospace");
-  let arame = Css.fontFamily("\"0Arame\", sans-serif");
+  let arame = Css.fontFamily("Arame, sans-serif");
   let futura =
     Css.fontFamily(
       "Futura-CondensedMedium, AvenirNextCondensed-Medium, HelveticaNeue-CondensedBold, \"Ubuntu Condensed\", \"Liberation Sans Narrow\", \"Franklin Gothic Demi Cond\", \"Arial Narrow\", sans-serif-condensed, Arial, \"Trebuchet MS\", \"Lucida Grande\", Tahoma, Verdana, sans-serif",

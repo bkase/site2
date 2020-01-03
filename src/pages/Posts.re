@@ -5,15 +5,6 @@ open Style;
 module Style = {
   open Css;
 
-  let () =
-    global(
-      "html",
-      [
-        fontSize(`percent(120.)),
-        media(MediaQuery.tablet, [fontSize(`percent(100.))]),
-      ],
-    );
-
   let content =
     style([
       media(

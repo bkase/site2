@@ -8,7 +8,7 @@ module Style = {
       Typeface.arame,
       fontSize(Sizes.Mobile.nav),
       listStyleType(`none),
-      marginBottom(`rem(2.)),
+      marginBottom(`rem(1.25)),
       media(
         MediaQuery.tablet,
         [fontSize(Sizes.nav), marginBottom(`rem(5.875))],
@@ -39,8 +39,8 @@ module Style = {
       justifyContent(`spaceBetween),
       lineHeight(`abs(1.0)),
       flexWrap(`wrap),
-      paddingTop(`rem(3.)),
-      marginBottom(`rem(1.5)),
+      paddingTop(`rem(1.875)),
+      marginBottom(`rem(0.875)),
       media(MediaQuery.tablet, [flexWrap(`nowrap), marginBottom(`zero)]),
       media(
         MediaQuery.extraLarge,

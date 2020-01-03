@@ -27,7 +27,7 @@ module H1 = {
           Typeface.futura,
           fontWeight(`medium),
           textTransform(`uppercase),
-          marginBottom(`rem(3.5)),
+          marginBottom(`rem(2.125)),
           // nudge to adjust for futura starting rightwards
           marginLeft(`px(-2)),
           media(
