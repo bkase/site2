@@ -71,12 +71,12 @@ let unpage = x =>
   | `Home => "BKASE"
   | `Blog => "BLOG"
   | `Videos => "VIDEOS"
-  | `Projs => "PROJS"
+  | `Code => "CODE"
   };
 
 let otherPages = page => {
   let x = Option.value(page, ~default=`Home);
-  [`Home, `Blog, `Videos, `Projs] |> List.filter(x' => x != x');
+  [`Home, `Blog, `Videos, `Code] |> List.filter(x' => x != x');
 };
 
 let href = page => {
@@ -84,7 +84,7 @@ let href = page => {
   | `Home => Links.home
   | `Blog => Links.blog
   | `Videos => Links.video
-  | `Projs => Links.projs
+  | `Code => Links.code
   };
 };
 
