@@ -8,7 +8,7 @@ Feel free to skip the background section if you don't care how this problem came
 
 ## Background
 
-The [Coda protocol](https://codaprotocol.com) uses [zk-SNARKs](TODO) to compress the blockchain down to a constant size. These SNARKs are proof objects certifying that some computation has been run correctly. Some nodes in the network create these SNARKs and others verify them. To create a SNARK one needs to have a specific large _proving key_[^1], and to verify a SNARK one needs to a specific small _verification key_[^2]. These proving and verification keys are indexed by the SNARK logic itself. In other words, if any computation changes than the proving and verifying keys need to change. In other other words, whenever some code is changed in the SNARK circuit during the development of Coda, both proving keys and verification keys must be regenerated. Key generation also involves some randomness.
+The [Coda protocol](https://codaprotocol.com) uses [zk-SNARKs](https://z.cash/technology/zksnarks/) to compress the blockchain down to a constant size. These SNARKs are proof objects certifying that some computation has been run correctly. Some nodes in the network create these SNARKs and others verify them. To create a SNARK one needs to have a specific large _proving key_[^1], and to verify a SNARK one needs to a specific small _verification key_[^2]. These proving and verification keys are indexed by the SNARK logic itself. In other words, if any computation changes than the proving and verifying keys need to change. In other other words, whenever some code is changed in the SNARK circuit during the development of Coda, both proving keys and verification keys must be regenerated. Key generation also involves some randomness.
 
 We want developers to be productive and so we want proving and verification key generation to happen transparently at build time.
 
@@ -98,7 +98,7 @@ end
 
 The task is to somehow incorporate generated knowledge into the output of `load_or_gen` in a clean way.
 
-In this model, actions are the asynchronous monad. Let's assume we're using Jane Street's [Async](TODO) library and then implemenet `Action` as follows:
+In this model, actions are the asynchronous monad. Let's assume we're using Jane Street's [Async](https://opensource.janestreet.com/async/) library and then implemenet `Action` as follows:
 
 ```ocaml
 module Action = struct
@@ -125,11 +125,11 @@ This is easy to implement, but it's a very terrible solution! Global mutable sta
 
 ## Extending our knowledge model
 
-The concept of knowledge has an interesting property: Once I know something, when presented with new information I'll never[^6] un-know it. As a consequence, knowledge gives rise to a [semi-lattice](TODO link to wikipedia). For `Track_generated.t`:
+The concept of knowledge has an interesting property: Once I know something, when presented with new information I'll never[^6] un-know it. As a consequence, knowledge gives rise to a [semi-lattice](https://en.wikipedia.org/wiki/Semilattice). For `Track_generated.t`:
 
 (insert latex diagram of semi-lattice knowledge)
 
-This means we can implement a well-defined [commutative](TODO)[^7], [associative](TODO)[^8], [idempotent](TODO)[^9] binary operation $$\join$$ that incorporates new knowledge. And in this case, since we don't act when `Cache_hit`, we can treat `Cache_hit` as our identity or bottom state.
+This means we can implement a well-defined [commutative](https://en.wikipedia.org/wiki/Commutative_property)[^7], [associative](https://en.wikipedia.org/wiki/Associative_property)[^8], [idempotent](https://en.wikipedia.org/wiki/Idempotence)[^9] binary operation $\wedge$ that incorporates new knowledge. And in this case, since we don't act when `Cache_hit`, we can treat `Cache_hit` as our identity or bottom state.
 
 ```ocaml
 module Track_generated = struct
@@ -174,7 +174,7 @@ The writer monad is ...
 
 * TODO: go over definition and laws
 
-We can layer it under the async monad[^10] to get a monad that both tracks knowledge and runs code concurrently. Below I'm using monad helpers from Jane Street's [base](TODO) library.
+We can layer it under the async monad[^10] to get a monad that both tracks knowledge and runs code concurrently. Below I'm using monad helpers from Jane Street's [base](https://opensource.janestreet.com/base/) library.
 
 ```ocaml
 module With_track_generated = struct
@@ -224,7 +224,7 @@ Writer monads provide a boilerplate-free, threadsafe, non-errorprone way to prop
 [^1]: Hundreds of megabytes in size
 [^2]: Kilobytes (TODO verify this) in size
 [^3]: Continuous integration
-[^4]: [Caches are monoids](TODO link to caches monoids video), did you know?
+[^4]: [Caches are monoids](https://www.youtube.com/watch?v=8uqXuEZLyUU), did you know?
 [^5]: If you really must know, we wanted to avoid implementing aws private-bucket uploading logic in OCaml just to support this one feature. So we want to shell out to the `aws` CLI tool. We also don't want to require devs to have access to the private S3 bucket as Coda is an open source project. Really only CI needs write access. So as a hack, when built on CI, the build fails in a strategic location after all SNARK related generation logic is finished.
 [^6]: Especially if I am a computer.
 [^7]: Knowing a and b can occur in any order.
