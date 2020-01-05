@@ -1,0 +1,234 @@
+import Page from '@reason/pages/Posts'; export default Page;
+
+# Writer monads for cache misses in Ocaml
+
+Tracking knowledge across large areas of a codebase is a fairly common task. One example of this is keeping track of whether or not some cache miss happens when loading many files. If we model knowledge monoidally, we can use a writer monad to track this knowledge without boilerplate in a simple and threadsafe manner.
+
+Feel free to skip the background section if you don't care how this problem came up in a real project.
+
+## Background
+
+The [Coda protocol](https://codaprotocol.com) uses [zk-SNARKs](TODO) to compress the blockchain down to a constant size. These SNARKs are proof objects certifying that some computation has been run correctly. Some nodes in the network create these SNARKs and others verify them. To create a SNARK one needs to have a specific large _proving key_[^1], and to verify a SNARK one needs to a specific small _verification key_[^2]. These proving and verification keys are indexed by the SNARK logic itself. In other words, if any computation changes than the proving and verifying keys need to change. In other other words, whenever some code is changed in the SNARK circuit during the development of Coda, both proving keys and verification keys must be regenerated. Key generation also involves some randomness.
+
+We want developers to be productive and so we want proving and verification key generation to happen transparently at build time.
+
+Naively, one can just always regenerate all proving and verification keys every build, but this has some drawbacks: (1) As randomness is involved during key generation, keys created from different builds will be incompatible. For example, you wouldn't be able to connect to a live network that was built on CI[^3] with some local branch of code, even though when you haven't touched any SNARK logic that would invalidate the keys. (2) Also, key generation is slow so we'd like to skip that step if possible.
+
+A nice solution to this would be to remove the randomness from key generation under certain conditions. This may be done by adding some debug branch through the code that generates . Unfortunately, it turned out to be quite a bit of work to get rid of all the randomness in the key generation logic. It's enough work that we decided to punt on it temporarily.
+
+Another solution is to introduce a series of layered caches[^4] that would be placed in front of key-generation in the key-loading process. To load keys in Coda, the following process is followed:
+
+1. Try to load the keys from a manual override path
+1. Try to load the keys from the normal installation path
+1. Try to load the keys from an S3 installation path
+1. Try to load the keys from S3
+1. Try to load the keys from the auto-generation path
+1. Auto-generate the keys
+1. Store the keys in the auto-generation path (only if the keys were auto-generated)
+1. Store the keys in S3 (only if the keys were auto-generated)
+
+To further complicate things, we need to propagate the knowledge that we want to store keys in S3 through several routines across a variety of different modules, and signal later if any one load caused some sort of regeneration. This is a combination of this part of the code being perhaps in need of a full-rewrite as it's been incrementally changed for two years and other unimportant reasons[^5].
+
+Finally we're sufficiently motivated.
+
+## Simplified Model
+
+The following is a simplified model of the problem. In reality, there may be several more places where loading occurs:
+
+```ocaml
+module Action : sig
+  type 'a t
+end
+```
+
+Actions are what happens when you invoke a load-or-generate function.
+
+```ocaml
+module A (Intf: sig
+  type elem1
+  type elem2
+  type t
+
+  val load_or_gen_a1 : unit -> elem1 Action.t
+  val load_or_gen_a2 : unit -> elem2 Action.t
+
+  val build : elem1 -> elem2 -> t
+end) = struct
+  include Intf
+
+  let load_or_gen_a =
+    let open Deferred.Let_syntax in
+    let* a1 = loadOrGenA1 () in
+    let+ a2 = loadOrGenA2 () in
+    build a1 a2
+end
+```
+
+In one spot we load `a1` and `a2` to create an `A.t`.
+
+```ocaml
+module B = struct
+  type t
+
+  let load_or_gen_b : unit -> t Action.t
+end
+```
+
+In another, we load a `B.t`.
+
+```ocaml
+module Subroutine = struct
+  let load_or_gen () =
+    let open Deferred.Let_syntax in
+    let* a = load_or_gen_a () in
+    let+ b = load_or_gen_b () in
+    (a, b)
+end
+```
+
+Finally we load `A.t` and `B.t` together.
+
+To model whether or not generation has occurred:
+
+```ocaml
+module Track_generated = struct
+  type t = [`Generated_something | `Cache_hit]
+end
+```
+
+The task is to somehow incorporate generated knowledge into the output of `load_or_gen` in a clean way.
+
+In this model, actions are the asynchronous monad. Let's assume we're using Jane Street's [Async](TODO) library and then implemenet `Action` as follows:
+
+```ocaml
+module Action = struct
+  type 'a t = 'a Deferred.t
+end
+```
+
+## Tracking Knowledge v1
+
+A naive way to track whether or not generation has occurred is to introduce some sort of global mutable state.
+
+```ocaml
+module Global_mutable_state = struct
+  let generation_occurred =
+    let state = ref `Cache_hit in
+    fun () ->
+      state := `Generated_something
+end
+```
+
+Then in `load_or_gen_a1`, `load_or_gen_a2`, and `load_or_gen_b` we need to call `Global_mutable_state.generation_occurred ()` whenever necessary.
+
+This is easy to implement, but it's a very terrible solution! Global mutable state means we need to be careful about concurrent writes. We also need to make sure we don't forget to call this function if we ever introduce a new place `load_or_gen` leaf in the call graph. It's error-prone and brittle.
+
+## Extending our knowledge model
+
+The concept of knowledge has an interesting property: Once I know something, when presented with new information I'll never[^6] un-know it. As a consequence, knowledge gives rise to a [semi-lattice](TODO link to wikipedia). For `Track_generated.t`:
+
+(insert latex diagram of semi-lattice knowledge)
+
+This means we can implement a well-defined [commutative](TODO)[^7], [associative](TODO)[^8], [idempotent](TODO)[^9] binary operation $$\join$$ that incorporates new knowledge. And in this case, since we don't act when `Cache_hit`, we can treat `Cache_hit` as our identity or bottom state.
+
+```ocaml
+module Track_generated = struct
+  type t = [`Generated_something | `Cache_hit]
+
+  let bottom = `Cache_hit
+
+  (* In Haskell, we'd provide a Monoid instance and use
+   * <>, but OCaml uses <> for does-not-equal-to *)
+  let (+) x y =
+    match (x, y) with
+    | (`Generated_something, _)
+    | (_, `Generated_something) -> `Generated_something
+    | (`Cache_hit, `Cache_hit) -> `Cache_hit
+end
+```
+
+## Tracking Knowledge v2
+
+Now we can ditch our global mutable state, and instead change our actions to also give us the new knowledge about `Track_generated.t`:
+
+```ocaml
+module Action = struct
+  type 'a t = ('a, Track_generated.t) Deferred.t
+end
+```
+
+Then we update `load_or_gen_a` and `load_or_gen` to thread through the knowledge. Here's what `load_or_gen_a` would look like afterwards:
+
+```ocaml
+let load_or_gen_a () =
+    let* (a1, t1) = load_or_gen_a1 () in
+    let+ (a2, t2) = load_or_gen_a2 () in
+    (build a1 a2, t1 + t2)
+```
+
+A better solution! We've eliminated global mutable state, so we've solved the concurrency problem. In fact, this is parallelizable since knowledge aggregation is commutative and associative. Unfortunately, we still have a bunch of boilerplate that we can't forget to add. And it's still brittle: The type-system will remind us to remember that actions have a tupled result, but we need to rely on warnings at best in order to remember to join together all of our knowledge.
+
+## Writer Monad
+
+The writer monad is ...
+
+* TODO: go over definition and laws
+
+We can layer it under the async monad[^10] to get a monad that both tracks knowledge and runs code concurrently. Below I'm using monad helpers from Jane Street's [base](TODO) library.
+
+```ocaml
+module With_track_generated = struct
+  type 'a t = {data: 'a, dirty: Track_generated.t}
+end
+module Deferred_with_track_generated = struct
+  type 'a t = 'a With_track_generated.t Deferred.t
+
+  include Monad.Make2 (struct
+    type nonrec 'a t = 'a t
+
+    let return x =
+      Deferred.return
+        {With_track_generated.data= x;
+         dirty= Track_generated.empty}
+
+    let map = `Define_using_bind
+
+    let bind t ~f =
+      let open Deferred.Let_syntax in
+      let* {With_track_generated.data; dirty= dirty1} = t in
+      let+ {With_track_generated.data= output; dirty= dirty2} = f data in
+      { With_track_generated.data= output
+      ; dirty= Track_generated.(dirty1 + dirty2) }
+  end)
+end
+```
+
+## Tracking Knowledge v3
+
+This time, we'll change `Action` once more:
+
+```ocaml
+module Action = struct
+  type 'a t = 'a Deferred_with_track_generated.t
+end
+```
+
+Then we'll get compilation errors until we change our leaf `load_or_gen` functions to return that initial `Track_generated.t`. And we're done! We don't have to change `load_or_gen_a` or `load_or_gen_b` at all other than opening this monad[^11] instead of `Deferred`.
+
+This is the best solution! There is no global mutable state. There is no boilerplate. Our code is clean and knowledge propagation is neatly handled for you. If later more `load_or_gen` functions are introduced, the type system will demand that the author remembers to send a `Track_generated.t` with the output.
+
+## Summary
+
+Writer monads provide a boilerplate-free, threadsafe, non-errorprone way to propogate knowledge through large swatchs of codebase. In Coda, we used the `Deferred_with_track_generated` monad to propagate knowledge that some generation occurs in order to give developers a transparent way to keep their code as compatible as possible with other builds to make them more productive.
+
+[^1]: Hundreds of megabytes in size
+[^2]: Kilobytes (TODO verify this) in size
+[^3]: Continuous integration
+[^4]: [Caches are monoids](TODO link to caches monoids video), did you know?
+[^5]: If you really must know, we wanted to avoid implementing aws private-bucket uploading logic in OCaml just to support this one feature. So we want to shell out to the `aws` CLI tool. We also don't want to require devs to have access to the private S3 bucket as Coda is an open source project. Really only CI needs write access. So as a hack, when built on CI, the build fails in a strategic location after all SNARK related generation logic is finished.
+[^6]: Especially if I am a computer.
+[^7]: Knowing a and b can occur in any order.
+[^8]: Knowing a and b and c can be paired up via ab or bc.
+[^9]: Knowing a and later learning about a has the same effect as learning about a only the first time.
+[^10]: We do this manually in OCaml by convention rather than using monad-transformers like one would in Haskell.
+[^11]: That's would be replacing `let open Deffered.Let_syntax in` with `let open Deferred_with_track_generated.Let_syntax in`, effectively moving from one monad to another.
