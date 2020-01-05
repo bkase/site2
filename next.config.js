@@ -10,7 +10,8 @@ module.exports = withTM(withBundleAnalyzer(withMDX({
   async exportPathMap() {
     let pages = {
       '/': { page: '/' },
-      '/posts/sample': { page: '/posts/sample' }
+      '/posts/sample': { page: '/posts/sample' },
+      '/posts/drafts/introducing-barbq': { page: '/posts/introducing-barbq' }
     };
 
     return pages;
