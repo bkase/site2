@@ -1,6 +1,11 @@
 const path = require('path');
 
-const withMDX = require('@next/mdx')();
+const withMDX = require('@next/mdx')({
+  options: {
+    remarkPlugins: [require('remark-math')],
+    rehypePlugins: [require('rehype-katex')]
+  }
+});
 const withTM = require('next-transpile-modules');
 const withBundleAnalyzer = require('@next/bundle-analyzer')({
   enabled : process.env.ANALYZE == 'true',
