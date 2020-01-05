@@ -89,20 +89,23 @@ module Style = {
 
 let s = s => ReasonReact.string(s);
 
-module P = BlogComponents.P.R;
-module A = BlogComponents.A.R;
+module P =
+  BlogComponents.P.R({
+    let config = `Smaller;
+  });
+module A =
+  BlogComponents.A.R({
+    let config = `Smaller;
+  });
 module H1 = BlogComponents.H1.R;
-
-let () =
-  Css.(
-    global(
-      "body",
-      [overflow(`hidden), width(`percent(100.)), height(`percent(100.))],
-    )
-  );
 
 [@react.component]
 let make = () => {
+  React.useEffect(() => {
+    Control.no_scrollable();
+    Some(Control.scrollable);
+  });
+
   <Page>
     <div
       className=Css.(

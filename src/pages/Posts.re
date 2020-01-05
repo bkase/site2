@@ -40,26 +40,36 @@ module Style = {
     ]);
 };
 
+let () = SyntaxHighlighting.draw();
+
 [@react.component]
 let make = (~children) => {
-  <Page>
+  React.useEffect(() => {
+    Control.scrollable();
+    None;
+  });
 
-      <div className=Style.page>
-        <Nav topLink={Some(`Blog)} />
-        <div className=Style.content>
-          <Next.MDXProvider
-            components={
-              "h1": BlogComponents.H1.make,
-              "h2": BlogComponents.H2.make,
-              "p": BlogComponents.P.make,
-              "a": BlogComponents.A.make,
-            }>
-            children
-          </Next.MDXProvider>
-        </div>
+  <Page>
+    <div className=Style.page>
+      <Nav topLink={Some(`Blog)} />
+      <div className=Style.content>
+        <Next.MDXProvider
+          components={
+            "h1": BlogComponents.H1.make,
+            "h2": BlogComponents.H2.make,
+            "p": BlogComponents.P.make,
+            "a": BlogComponents.A.make,
+            "code": BlogComponents.Code.make,
+            "ul": BlogComponents.Ul.make,
+            "ol": BlogComponents.Ol.make,
+            "img": BlogComponents.Img.make,
+          }>
+          children
+        </Next.MDXProvider>
       </div>
-    </Page>;
-    // let router = Next.Router.useRouter();
+    </div>
+  </Page>;
+  // let router = Next.Router.useRouter();
 };
 
 let default = make;
