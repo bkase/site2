@@ -1,20 +1,21 @@
 import Page from '@reason/pages/Posts'; export default Page;
+import HalfImageWrapper from '@reason/HalfImageWrapper';
 
 # Writer monads for cache misses in Ocaml
 
-Tracking knowledge across large areas of a codebase is a fairly common task. One example of this is keeping track of whether or not some cache miss happens when loading many files. If we model knowledge monoidally, we can use a writer monad to track this knowledge without boilerplate in a simple and threadsafe manner.
+Tracking knowledge across large areas of a codebase is a fairly common task. Keeping track of whether or not some cache miss happens when loading files is an example of this -- you could want to track this in a metric. If we model knowledge monoidally, we can use a writer monad to track this knowledge without boilerplate in a simple and threadsafe manner.
 
 Feel free to skip the background section if you don't care how this problem came up in a real project.
 
 ## Background
 
-The [Coda protocol](https://codaprotocol.com) uses [zk-SNARKs](https://z.cash/technology/zksnarks/) to compress the blockchain down to a constant size. These SNARKs are proof objects certifying that some computation has been run correctly. Some nodes in the network create these SNARKs and others verify them. To create a SNARK one needs to have a specific large _proving key_[^1], and to verify a SNARK one needs to a specific small _verification key_[^2]. These proving and verification keys are indexed by the SNARK logic itself. In other words, if any computation changes than the proving and verifying keys need to change. In other other words, whenever some code is changed in the SNARK circuit during the development of Coda, both proving keys and verification keys must be regenerated. Key generation also involves some randomness.
+The [Coda protocol](https://codaprotocol.com) uses [zk-SNARKs](https://z.cash/technology/zksnarks/) to compress the blockchain down to a constant size. These SNARKs are proof objects certifying that some computation has been run correctly. Some nodes in the network create these SNARKs and others verify them. To create a SNARK one needs to have a specific large _proving key_[^1], and to verify a SNARK one needs to a specific small _verification key_[^2]. These proving and verification keys are indexed by the SNARK logic itself. In other words, if any computation changes then the proving and verifying keys need to change. In other other words, whenever some code is changed in the SNARK circuit during the development of Coda, both proving keys and verification keys must be regenerated. Key generation also involves some randomness.
 
 We want developers to be productive and so we want proving and verification key generation to happen transparently at build time.
 
 Naively, one can just always regenerate all proving and verification keys every build, but this has some drawbacks: (1) As randomness is involved during key generation, keys created from different builds will be incompatible. For example, you wouldn't be able to connect to a live network that was built on CI[^3] with some local branch of code, even though when you haven't touched any SNARK logic that would invalidate the keys. (2) Also, key generation is slow so we'd like to skip that step if possible.
 
-A nice solution to this would be to remove the randomness from key generation under certain conditions. This may be done by adding some debug branch through the code that generates . Unfortunately, it turned out to be quite a bit of work to get rid of all the randomness in the key generation logic. It's enough work that we decided to punt on it temporarily.
+A nice solution to this would be to remove the randomness from key generation under certain conditions. This may be done by adding some debug branch through the code that generates. Unfortunately, it turned out to be quite a bit of work to get rid of all the randomness in the key generation logic. It's enough work that we decided to punt on it temporarily.
 
 Another solution is to introduce a series of layered caches[^4] that would be placed in front of key-generation in the key-loading process. To load keys in Coda, the following process is followed:
 
@@ -27,9 +28,9 @@ Another solution is to introduce a series of layered caches[^4] that would be pl
 1. Store the keys in the auto-generation path (only if the keys were auto-generated)
 1. Store the keys in S3 (only if the keys were auto-generated)
 
-To further complicate things, we need to propagate the knowledge that we want to store keys in S3 through several routines across a variety of different modules, and signal later if any one load caused some sort of regeneration. This is a combination of this part of the code being perhaps in need of a full-rewrite as it's been incrementally changed for two years and other unimportant reasons[^5].
+To further complicate things, we need to track the outcome of the key generation process and propagate it to various interested observers for legacy reasons[^5].
 
-Finally we're sufficiently motivated.
+Finally, we're sufficiently motivated.
 
 ## Simplified Model
 
@@ -98,7 +99,7 @@ end
 
 The task is to somehow incorporate generated knowledge into the output of `load_or_gen` in a clean way.
 
-In this model, actions are the asynchronous monad. Let's assume we're using Jane Street's [Async](https://opensource.janestreet.com/async/) library and then implemenet `Action` as follows:
+In this model, actions are the asynchronous monad. Let's assume we're using Jane Street's [Async](https://opensource.janestreet.com/async/) library and then implement `Action` as follows:
 
 ```ocaml
 module Action = struct
@@ -119,17 +120,30 @@ module Global_mutable_state = struct
 end
 ```
 
-Then in `load_or_gen_a1`, `load_or_gen_a2`, and `load_or_gen_b` we need to call `Global_mutable_state.generation_occurred ()` whenever necessary.
+Then in `load_or_gen_a1`, `load_or_gen_a2`, and `load_or_gen_b` we need to call `generation_occurred ()` whenever necessary.
 
 This is easy to implement, but it's a very terrible solution! Global mutable state means we need to be careful about concurrent writes. We also need to make sure we don't forget to call this function if we ever introduce a new place `load_or_gen` leaf in the call graph. It's error-prone and brittle.
 
 ## Extending our knowledge model
 
-The concept of knowledge has an interesting property: Once I know something, when presented with new information I'll never[^6] un-know it. As a consequence, knowledge gives rise to a [semi-lattice](https://en.wikipedia.org/wiki/Semilattice). For `Track_generated.t`:
+The concept of knowledge has an interesting property: Once I know `a`, when presented with new information `b` I'll never[^6] un-know `a`. As a consequence, knowledge gives rise to a [semi-lattice](https://en.wikipedia.org/wiki/Semilattice).
 
-(insert latex diagram of semi-lattice knowledge)
+<HalfImageWrapper>
 
-This means we can implement a well-defined [commutative](https://en.wikipedia.org/wiki/Commutative_property)[^7], [associative](https://en.wikipedia.org/wiki/Associative_property)[^8], [idempotent](https://en.wikipedia.org/wiki/Idempotence)[^9] binary operation $\wedge$ that incorporates new knowledge. And in this case, since we don't act when `Cache_hit`, we can treat `Cache_hit` as our identity or bottom state.
+![Semilattice for bottom a b {a,b}](/static/posts/ocaml-writer/knowledge-general.png)
+
+</HalfImageWrapper>
+
+At the bottom, I know nothing or $\bot$. Afterward, I can learn about $a$ or $b$, and once I see the other one I know both $\{a,b\}$.
+
+This means we can implement a well-defined [commutative](https://en.wikipedia.org/wiki/Commutative_property)[^7], [associative](https://en.wikipedia.org/wiki/Associative_property)[^8], [idempotent](https://en.wikipedia.org/wiki/Idempotence)[^9] binary operation $\vee$ that incorporates new knowledge. And in this case, since we don't act when `Cache_hit`, we can treat `Cache_hit` as our identity or bottom state, and `Generated_something` is our top state.
+
+<HalfImageWrapper>
+
+![Semilattice cache_hit at the bottom generated_something at the top](/static/posts/ocaml-writer/knowledge-specific.png)
+
+</HalfImageWrapper>
+
 
 ```ocaml
 module Track_generated = struct
@@ -153,7 +167,7 @@ Now we can ditch our global mutable state, and instead change our actions to als
 
 ```ocaml
 module Action = struct
-  type 'a t = ('a, Track_generated.t) Deferred.t
+  type 'a t = ('a * Track_generated.t) Deferred.t
 end
 ```
 
@@ -166,15 +180,40 @@ let load_or_gen_a () =
     (build a1 a2, t1 + t2)
 ```
 
-A better solution! We've eliminated global mutable state, so we've solved the concurrency problem. In fact, this is parallelizable since knowledge aggregation is commutative and associative. Unfortunately, we still have a bunch of boilerplate that we can't forget to add. And it's still brittle: The type-system will remind us to remember that actions have a tupled result, but we need to rely on warnings at best in order to remember to join together all of our knowledge.
+A better solution! We've eliminated global mutable state, so we've solved the concurrency problem. This is parallelizable since knowledge aggregation is commutative and associative. Unfortunately, we still have a bunch of boilerplate that we can't forget to add. And it's still brittle: The type-system will remind us to remember that actions have a tupled result, but we need to rely on warnings at best to remember to join together all of our knowledge.
 
 ## Writer Monad
 
-The writer monad is ...
+The writer monad wraps computation alongside some monoidal[^10] value. Traditionally, this is used in a language like Haskell to aggregate logs[^11] -- some call it the logging monad.  However, we're free to use any monoid here. Monoids are values that have an identity and an associative binary operation -- just like $\vee$ that we've described above.
 
-* TODO: go over definition and laws
+For reference, here's an OCaml implementation of a writer monad[^12]:
 
-We can layer it under the async monad[^10] to get a monad that both tracks knowledge and runs code concurrently. Below I'm using monad helpers from Jane Street's [base](https://opensource.janestreet.com/base/) library.
+```ocaml
+module type Monoid_intf = sig
+  type t
+  val empty : t
+  val (+) : t -> t -> t
+end
+
+module Writer (M : Monoid) = struct
+  type 'a t = 'a * M.t
+
+  include Monad.Make (struct
+    type nonrec 'a t = 'a t
+
+    let return x = (x, M.empty)
+
+    let map = `Define_using_bind
+
+    let bind (a, m1) ~f =
+      let open M in
+      let (b, m2) = f a in
+      (b, m1 + m2)
+  end)
+end
+```
+
+We can layer Writer on `Track_generated` under the async monad[^13] to get a monad that both tracks knowledge and runs code concurrently.
 
 ```ocaml
 module With_track_generated = struct
@@ -183,7 +222,7 @@ end
 module Deferred_with_track_generated = struct
   type 'a t = 'a With_track_generated.t Deferred.t
 
-  include Monad.Make2 (struct
+  include Monad.Make (struct
     type nonrec 'a t = 'a t
 
     let return x =
@@ -213,22 +252,25 @@ module Action = struct
 end
 ```
 
-Then we'll get compilation errors until we change our leaf `load_or_gen` functions to return that initial `Track_generated.t`. And we're done! We don't have to change `load_or_gen_a` or `load_or_gen_b` at all other than opening this monad[^11] instead of `Deferred`.
+Then we'll get compilation errors until we change our leaf `load_or_gen` functions to return that initial `Track_generated.t`. And we're done! We don't have to change `load_or_gen_a` or `load_or_gen_b` at all other than opening this monad[^14] instead of `Deferred`.
 
 This is the best solution! There is no global mutable state. There is no boilerplate. Our code is clean and knowledge propagation is neatly handled for you. If later more `load_or_gen` functions are introduced, the type system will demand that the author remembers to send a `Track_generated.t` with the output.
 
 ## Summary
 
-Writer monads provide a boilerplate-free, threadsafe, non-errorprone way to propogate knowledge through large swatchs of codebase. In Coda, we used the `Deferred_with_track_generated` monad to propagate knowledge that some generation occurs in order to give developers a transparent way to keep their code as compatible as possible with other builds to make them more productive.
+Writer monads provide a boilerplate-free, thread-safe, non-error-prone way to propagate knowledge through large swaths of a codebase. In Coda, we used the `Deferred_with_track_generated` monad to propagate knowledge that some generation occurs to give developers a transparent way to keep their code as compatible as possible with other builds to make them more productive.
 
 [^1]: Hundreds of megabytes in size
 [^2]: Kilobytes (TODO verify this) in size
 [^3]: Continuous integration
 [^4]: [Caches are monoids](https://www.youtube.com/watch?v=8uqXuEZLyUU), did you know?
-[^5]: If you really must know, we wanted to avoid implementing aws private-bucket uploading logic in OCaml just to support this one feature. So we want to shell out to the `aws` CLI tool. We also don't want to require devs to have access to the private S3 bucket as Coda is an open source project. Really only CI needs write access. So as a hack, when built on CI, the build fails in a strategic location after all SNARK related generation logic is finished.
+[^5]: If you really must know, we wanted to avoid implementing aws private-bucket uploading logic in OCaml just to support this one feature. So we want to shell out to the `aws` CLI tool. We also don't want to require devs to have access to the private S3 bucket as Coda is an open source project. Only CI needs write access. So as a hack, when built on CI, the build fails in a strategic location after all SNARK related generation logic is finished.
 [^6]: Especially if I am a computer.
 [^7]: Knowing a and b can occur in any order.
 [^8]: Knowing a and b and c can be paired up via ab or bc.
-[^9]: Knowing a and later learning about a has the same effect as learning about a only the first time.
-[^10]: We do this manually in OCaml by convention rather than using monad-transformers like one would in Haskell.
-[^11]: That's would be replacing `let open Deffered.Let_syntax in` with `let open Deferred_with_track_generated.Let_syntax in`, effectively moving from one monad to another.
+[^9]: Knowing a and later learning about `a` has the same effect as learning about `a` only the first time.
+[^10]: Keep reading below for more on monoids.
+[^11]: The monoid being strings with concatenation for example
+[^12]: I'm using monad helpers from Jane Street's [base](https://opensource.janestreet.com/base/) library.
+[^13]: We do this manually in OCaml by convention rather than using monad-transformers like one would in Haskell.
+[^14]: That's would be replacing `let open Deffered.Let_syntax in` with `let open Deferred_with_track_generated.Let_syntax in`, effectively moving from one monad to another.
