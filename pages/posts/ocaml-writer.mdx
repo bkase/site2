@@ -266,9 +266,9 @@ Writer monads provide a boilerplate-free, thread-safe, non-error-prone way to pr
 [^4]: [Caches are monoids](https://www.youtube.com/watch?v=8uqXuEZLyUU), did you know?
 [^5]: If you really must know, we wanted to avoid implementing aws private-bucket uploading logic in OCaml just to support this one feature. So we want to shell out to the `aws` CLI tool. We also don't want to require devs to have access to the private S3 bucket as Coda is an open source project. Only CI needs write access. So as a hack, when built on CI, the build fails in a strategic location after all SNARK related generation logic is finished.
 [^6]: Especially if I am a computer.
-[^7]: Knowing a and b can occur in any order.
-[^8]: Knowing a and b and c can be paired up via ab or bc.
-[^9]: Knowing a and later learning about `a` has the same effect as learning about `a` only the first time.
+[^7]: Knowing $a$ and $b$ can occur in any order.
+[^8]: Knowing $a$ and $b$ and $c$ can be paired up via $a,b$ or $b,c$.
+[^9]: Knowing $a$ and later learning about $a$ has the same effect as learning about $a$ only the first time.
 [^10]: Keep reading below for more on monoids.
 [^11]: The monoid being strings with concatenation for example
 [^12]: I'm using monad helpers from Jane Street's [base](https://opensource.janestreet.com/base/) library.
