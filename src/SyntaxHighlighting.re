@@ -23,7 +23,7 @@ let draw = () => {
         width(`auto),
         textAlign(`right),
         display(`inlineBlock),
-        color(Style.Colors.navy(0.25)),
+        color(Style.Colors.navy(0.15)),
         marginRight(`rem(0.5)),
         media(Style.MediaQuery.tablet, [marginRight(`rem(1.))]),
         media(Style.MediaQuery.largeWithMargins, [marginRight(`rem(1.5))]),
