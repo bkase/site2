@@ -3,7 +3,7 @@ import HalfImageWrapper from '@reason/HalfImageWrapper';
 
 # Writer monads for cache misses in Ocaml
 
-Tracking knowledge across large areas of a codebase is a fairly common task. Keeping track of whether or not some cache miss happens when loading files is an example of this -- you could want to track this in a metric. If we model knowledge monoidally, we can use a writer monad to track this knowledge without boilerplate in a simple and threadsafe manner.
+Tracking knowledge across large areas of a codebase is a fairly common task. Keeping track of whether or not some cache miss happens when loading files is an example of this — you could want to track this in a metric. If we model knowledge monoidally, we can use a writer monad to track this knowledge without boilerplate in a simple and threadsafe manner.
 
 Feel free to skip the background section if you don't care how this problem came up in a real project.
 
@@ -184,7 +184,7 @@ A better solution! We've eliminated global mutable state, so we've solved the co
 
 ## Writer Monad
 
-The writer monad wraps computation alongside some monoidal[^10] value. Traditionally, this is used in a language like Haskell to aggregate logs[^11] -- some call it the logging monad.  However, we're free to use any monoid here. Monoids are values that have an identity and an associative binary operation -- just like $\vee$ that we've described above.
+The writer monad wraps computation alongside some monoidal[^10] value. Traditionally, this is used in a language like Haskell to aggregate logs[^11] — some call it the logging monad.  However, we're free to use any monoid here. Monoids are values that have an identity and an associative binary operation — just like $\vee$ that we've described above.
 
 For reference, here's an OCaml implementation of a writer monad[^12]:
 
