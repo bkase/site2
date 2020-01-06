@@ -174,10 +174,10 @@ module Sup = {
     });
   module R = {
     [@react.component]
-    let make = (~children) => {
+    let make = (~id="", ~children) => {
       let content = children##props##children;
       let href = children##props##href;
-      <sup className> <A href> content </A> </sup>;
+      <sup className id> <A href> content </A> </sup>;
     };
   };
 };
@@ -242,7 +242,7 @@ module Ol = {
             const children_ = [...children];
             return children_.map(child => {
               const nextChildrenLength = child.props.children.length;
-              return (<li>
+              return (<li id={child.props.id}>
               { child.props.children.map((inner, i) => {
                 if (i === nextChildrenLength-1) {
                   return f(inner.props.children, inner.props.href);
