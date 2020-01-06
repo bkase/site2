@@ -1,5 +1,5 @@
 [@react.component]
-let make = (~children) => {
+let make = (~children, ~extraHead=React.null) => {
   <>
     <Next.Head>
       <link
@@ -7,6 +7,7 @@ let make = (~children) => {
         rel="stylesheet"
       />
       <link href="/static/reset.css" rel="stylesheet" />
+      extraHead
     </Next.Head>
     <div> children </div>
   </>;
