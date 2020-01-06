@@ -64,9 +64,12 @@ let make = (~children) => {
             "p": BlogComponents.P.make,
             "a": BlogComponents.A.make,
             "code": BlogComponents.Code.make,
+            "inlineCode": BlogComponents.InlineCode.make,
             "ul": BlogComponents.Ul.make,
-            "ol": BlogComponents.Ol.make,
+            "ol": BlogComponents.Ol.R.make,
+            "hr": BlogComponents.Hr.make,
             "img": BlogComponents.Img.make,
+            "sup": BlogComponents.Sup.R.make,
           }>
           children
         </Next.MDXProvider>
