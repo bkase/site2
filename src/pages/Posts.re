@@ -21,8 +21,12 @@ module Style = {
     style([
       maxWidth(`rem(56.625)),
       margin(`auto),
-      paddingLeft(`rem(1.5)),
-      paddingRight(`rem(1.5)),
+      paddingLeft(`rem(1.0)),
+      paddingRight(`rem(1.0)),
+      media(
+        MediaQuery.halfTablet,
+        [paddingLeft(`rem(1.5)), paddingRight(`rem(1.5))],
+      ),
       media(
         MediaQuery.tablet,
         [paddingLeft(`rem(2.375)), paddingRight(`rem(2.375))],
@@ -49,7 +53,7 @@ let make = (~children) => {
     None;
   });
 
-  <Page>
+  <Page extraHead=BlogComponents.Katex.head>
     <div className=Style.page>
       <Nav topLink={Some(`Blog)} />
       <div className=Style.content>
@@ -60,9 +64,12 @@ let make = (~children) => {
             "p": BlogComponents.P.make,
             "a": BlogComponents.A.make,
             "code": BlogComponents.Code.make,
+            "inlineCode": BlogComponents.InlineCode.make,
             "ul": BlogComponents.Ul.make,
-            "ol": BlogComponents.Ol.make,
+            "ol": BlogComponents.Ol.R.make,
+            "hr": BlogComponents.Hr.make,
             "img": BlogComponents.Img.make,
+            "sup": BlogComponents.Sup.R.make,
           }>
           children
         </Next.MDXProvider>

@@ -39,51 +39,6 @@ module Config = {
   external contentful_space: string = "CONTENTFUL_SPACE";
 };
 
-/*
-module PrismReactRenderer = {
-  module Theme = {
-    type t;
-  };
-
-  module PrismLib = {
-    type t;
-  };
-
-  module Token = {
-    type t;
-  };
-
-  module Highlight = {
-    module GetLineInput = {
-      type t = {
-        line: array(Token.t),
-        key: string
-      };
-    };
-    module GetLineOutput = {
-      type t = {
-        className: string,
-
-      };
-    };
-
-    type t = {
-      className: string,
-      style: string,
-      tokens: array(array(Token.t)),
-      getLineProps: GetLineInput.t => ,
-
-    };
-  };
-
-  [@bs.module "prism-react-renderer"] [@react.component]
-  external make:
-    (~_Prism: PrismLib.t, ~theme: Theme.t, ~code: string, ~language: string, ~children: Highlight.t) =>
-    React.element =
-    "default";
-};
-*/
-
 module MDXProvider = {
   [@bs.module "@mdx-js/react"] [@react.component]
   external make:
