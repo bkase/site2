@@ -1,13 +1,14 @@
-
-[%%raw {|
+%raw
+{|
   import Highlight, {defaultProps} from 'prism-react-renderer'
-|}]
+|};
 
 // ----
 // Languages
 // ----
 
-; [%%raw {|
+%raw
+{|
 // Nix
 defaultProps.Prism.languages.nix={comment:/\/\*[\s\S]*?\*\/|#.*/,string:{pattern:/"(?:[^"\\]|\\[\s\S])*"|''(?:(?!'')[\s\S]|''(?:'|\\|\$\{))*''/,greedy:!0,inside:{interpolation:{pattern:/(^|(?:^|(?!'').)[^\\])\$\{(?:[^}]|\{[^}]*\})*}/,lookbehind:!0,inside:{antiquotation:{pattern:/^\$(?=\{)/,alias:"variable"}}}}},url:[/\b(?:[a-z]{3,7}:\/\/)[\w\-+%~\/.:#=?&]+/,{pattern:/([^\/])(?:[\w\-+%~.:#=?&]*(?!\/\/)[\w\-+%~\/.:#=?&])?(?!\/\/)\/[\w\-+%~\/.:#=?&]*/,lookbehind:!0}],antiquotation:{pattern:/\$(?=\{)/,alias:"variable"},number:/\b\d+\b/,keyword:/\b(?:assert|builtins|else|if|in|inherit|let|null|or|then|with)\b/,function:/\b(?:abort|add|all|any|attrNames|attrValues|baseNameOf|compareVersions|concatLists|currentSystem|deepSeq|derivation|dirOf|div|elem(?:At)?|fetch(?:url|Tarball)|filter(?:Source)?|fromJSON|genList|getAttr|getEnv|hasAttr|hashString|head|import|intersectAttrs|is(?:Attrs|Bool|Function|Int|List|Null|String)|length|lessThan|listToAttrs|map|mul|parseDrvName|pathExists|read(?:Dir|File)|removeAttrs|replaceStrings|seq|sort|stringLength|sub(?:string)?|tail|throw|to(?:File|JSON|Path|String|XML)|trace|typeOf)\b|\bfoldl'\B/,boolean:/\b(?:true|false)\b/,operator:/[=!<>]=?|\+\+?|\|\||&&|\/\/|->?|[?@]/,punctuation:/[{}()[\].,:;]/},defaultProps.Prism.languages.nix.string.inside.interpolation.inside.rest=defaultProps.Prism.languages.nix;
 
@@ -23,12 +24,11 @@ defaultProps.Prism.languages.reason=defaultProps.Prism.languages.extend("clike",
 // Swift
 defaultProps.Prism.languages.swift=defaultProps.Prism.languages.extend("clike",{string:{pattern:/("|')(?:\\(?:\((?:[^()]|\([^)]+\))+\)|\r\n|[\s\S])|(?!\1)[^\\\r\n])*\1/,greedy:!0,inside:{interpolation:{pattern:/\\\((?:[^()]|\([^)]+\))+\)/,inside:{delimiter:{pattern:/^\\\(|\)$/,alias:"variable"}}}}},keyword:/\b(?:as|associativity|break|case|catch|class|continue|convenience|default|defer|deinit|didSet|do|dynamic(?:Type)?|else|enum|extension|fallthrough|final|for|func|get|guard|if|import|in|infix|init|inout|internal|is|lazy|left|let|mutating|new|none|nonmutating|operator|optional|override|postfix|precedence|prefix|private|protocol|public|repeat|required|rethrows|return|right|safe|self|Self|set|static|struct|subscript|super|switch|throws?|try|Type|typealias|unowned|unsafe|var|weak|where|while|willSet|__(?:COLUMN__|FILE__|FUNCTION__|LINE__))\b/,number:/\b(?:[\d_]+(?:\.[\de_]+)?|0x[a-f0-9_]+(?:\.[a-f0-9p_]+)?|0b[01_]+|0o[0-7_]+)\b/i,constant:/\b(?:nil|[A-Z_]{2,}|k[A-Z][A-Za-z_]+)\b/,atrule:/@\b(?:IB(?:Outlet|Designable|Action|Inspectable)|class_protocol|exported|noreturn|NS(?:Copying|Managed)|objc|UIApplicationMain|auto_closure)\b/,builtin:/\b(?:[A-Z]\S+|abs|advance|alignof(?:Value)?|assert|contains|count(?:Elements)?|debugPrint(?:ln)?|distance|drop(?:First|Last)|dump|enumerate|equal|filter|find|first|getVaList|indices|isEmpty|join|last|lexicographicalCompare|map|max(?:Element)?|min(?:Element)?|numericCast|overlaps|partition|print(?:ln)?|reduce|reflect|reverse|sizeof(?:Value)?|sort(?:ed)?|split|startsWith|stride(?:of(?:Value)?)?|suffix|swap|toDebugString|toString|transcode|underestimateCount|unsafeBitCast|with(?:ExtendedLifetime|Unsafe(?:MutablePointers?|Pointers?)|VaList))\b/}),defaultProps.Prism.languages.swift.string.inside.interpolation.inside.rest=defaultProps.Prism.languages.swift;
 
-|}]
+|};
 
 // ---
 // Component
 // ---
-
 
 [@react.component]
 let make = (~className, ~extraClassName, ~children=ReasonReact.null) => {
@@ -36,25 +36,26 @@ let make = (~className, ~extraClassName, ~children=ReasonReact.null) => {
   let _className = className;
   let _extraClassName = extraClassName;
 
-  [%bs.raw {|
-    <Highlight {...defaultProps} code={Props.children} language={Props.className.replace('language-', '')}>
-      {({className: className_, tokens, getLineProps, getTokenProps}) => (
-        <code className={className_ + " " + Props.extraClassName}>
-          {tokens.map((line, i) => {
+  %bs.raw
+  {|
+    React.createElement("Highlight",
+                      {code: Props.children,
+                       language: Props.className.replace('language-', ''),
+                       ...defaultProps},
+      ({className: className_, tokens, getLineProps, getTokenProps}) => (
+        React.createElement("code", {className: className_ + " " + Props.extraClassName}, tokens.map((line, i) => {
           const props = getLineProps({line, key: i});
           props.style = null;
           return (
-            <div key={i} {...props}>
-              {line.map((token, key) => {
+            React.createElement("div", {key: i, ...props}, line.map((token, key) => {
               const props = getTokenProps({token, key});
               props.style = null;
               return (
-                <span key={key} {...props} />
-              )})}
-            </div>
-          )})}
-        </code>
-      )}
-    </Highlight>
-  |}]
+                React.createElement("span", {key: key, ...props})
+              );
+              })))
+          })
+          )
+      ))
+  |};
 };
