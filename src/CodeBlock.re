@@ -38,7 +38,9 @@ let make = (~className, ~extraClassName, ~children=ReasonReact.null) => {
 
   %bs.raw
   {|
-    React.createElement("Highlight",
+    (function() {
+    const React = require('react');
+    return React.createElement(Highlight,
                       {code: Props.children,
                        language: Props.className.replace('language-', ''),
                        ...defaultProps},
@@ -57,5 +59,6 @@ let make = (~className, ~extraClassName, ~children=ReasonReact.null) => {
           })
           )
       ))
+      }())
   |};
 };
