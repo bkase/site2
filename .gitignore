@@ -4,4 +4,4 @@ lib/
 .next/
 .merlin
 *.gen.js
-public/static/rss.xml
+public/static/blog-rss.xml

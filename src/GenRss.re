@@ -61,38 +61,47 @@ module Xml = {
   };
 };
 
-type input = {
+type item = {
   date: Js.Date.t,
   title: string,
   description: string,
-  slug: string,
+  urlPath: string,
 };
 let draw =
-  (. input: input) => {
+  (. items: array(item)) => {
+    let items = Array.to_list(items);
     Xml.(
       rss([
-        channel([
-          atomLink(
-            ~attrs=[
-              ("href", "https://bkase.dev/posts/rss.xml"),
-              ("rel", "self"),
-              ("type", "application/rss+xml"),
-            ],
+        channel(
+          [
+            atomLink(
+              ~attrs=[
+                ("href", "https://bkase.dev/static/blog-rss.xml"),
+                ("rel", "self"),
+                ("type", "application/rss+xml"),
+              ],
+            ),
+            title("bkase.dev blog"),
+            description("The ramblings of Brandon Kase"),
+            link("https://bkase.dev"),
+            lastBuildDate(Js.Date.make() |> Js.Date.toUTCString),
+            pubDate(List.hd(items).date |> Js.Date.toUTCString),
+            ttl("60"),
+          ]
+          @ (
+            items
+            |> List.map(input => {
+                 let href = "https://bkase.dev" ++ input.urlPath;
+                 item([
+                   title(input.title),
+                   description(input.description),
+                   link(href),
+                   pubDate(input.date |> Js.Date.toUTCString),
+                   guid(~attrs=[("isPermaLink", "true")], href),
+                 ]);
+               })
           ),
-          title(input.title),
-          description(input.description),
-          link("https://bkase.dev"),
-          lastBuildDate(Js.Date.make() |> Js.Date.toUTCString),
-          pubDate(input.date |> Js.Date.toUTCString),
-          ttl("720"),
-          item([
-            title(input.title),
-            description(input.description),
-            link("https://bkase.dev/posts/" ++ input.slug),
-            pubDate(input.date |> Js.Date.toUTCString),
-            guid(~attrs=[("isPermaLink", "false")], "xxx"),
-          ]),
-        ]),
+        ),
       ])
       |> render
     );
