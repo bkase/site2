@@ -15,6 +15,7 @@ module Xml = {
       ~attrs=[
         ("version", "2.0"),
         ("xmlns:atom", "http://www.w3.org/2005/Atom"),
+        ("xmlns:content", "http://purl.org/rss/1.0/modules/content/"),
       ],
     );
   let atomLink = nodee("atom:link");
@@ -27,6 +28,7 @@ module Xml = {
   let ttl = nodet("ttl");
   let item = node("item");
   let guid = nodet("guid");
+  let contentEncoded = nodet("content:encoded");
 
   let render = t => {
     let rec go = t => {
@@ -66,6 +68,7 @@ type item = {
   title: string,
   description: string,
   urlPath: string,
+  content: string,
 };
 let draw =
   (. items: array(item)) => {
@@ -95,6 +98,9 @@ let draw =
                  item([
                    title(input.title),
                    description(input.description),
+                   contentEncoded(
+                     "\n<![CDATA[\n" ++ input.content ++ "\n]]>\n",
+                   ),
                    link(href),
                    pubDate(input.date |> Js.Date.toUTCString),
                    guid(~attrs=[("isPermaLink", "true")], href),

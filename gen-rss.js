@@ -1,20 +1,43 @@
 const Rss = require('./lib/es6/src/GenRss.bs.js');
 
-const mdx = require('@mdx-js/mdx');
+const mdx_ = require('@mdx-js/mdx');
 const babel = require("@babel/core");
 const fs = require('fs');
 const path = require('path');
+const ReactDOMServer = require('react-dom/server');
+const React = require('react');
+const mdxReact = require('@mdx-js/react');
+const mdxRuntime = require('@mdx-js/runtime');
 
 function requireFromStringSync(src, filename) {
   const Module = module.constructor;
   const m = new Module();
   m._compile(src, filename);
+  // ================
+  // THE HACKIEST THING THE IN WORLD
+  // Concieved at 3am on a Friday
+  //
+  // There is probably a better way to do this, but I just wanted this to work.
+  // ================
+  //
+  // Set some "globals" that we want to closure into m.exports.default
+  const mdx = React.createElement;
+  const MDXLayout = function(props) {
+    return React.createElement("div", Object.assign({}, props, {
+      style : {maxWidth : "38rem", padding : "1.5rem", margin : "auto"}
+    }));
+  };
+  const _extends = Object.assign;
+  const layoutProps = {};
+  // redefine m.exports.default to close over these functions
+  m.exports.default =
+      eval("(function() { return " + m.exports.default.toString() + "})()");
   return m.exports;
 }
 
 function requireMDXSync(mdxSrc, filename) {
   let ast = null;
-  const jsx = mdx.sync(
+  const jsx = mdx_.sync(
       mdxSrc,
       {remarkPlugins : [function(){return function(tree){ast = tree}}]});
   const babelOptions = babel.loadOptions({
@@ -64,6 +87,8 @@ function scanDir(dirPath, extension) {
 
 function readPostMetadata(postPath) {
   const[mod, ast] = requireMDXFileSync(postPath);
+  const content = ReactDOMServer.renderToString(React.createElement(
+      mdxReact.MDXProvider, [], mod.default({components : []})));
   const {meta} = mod;
   const title = (meta && meta.title)
                     ? meta.title
@@ -86,6 +111,7 @@ function readPostMetadata(postPath) {
     urlPath: postPath.replace(/\\/, '/').replace(/^pages/, '').replace(/\.mdx?$/, ''),
     title,
     date: (meta && new Date(meta.date)) || new Date(),
+    content,
     description
   };
 }
