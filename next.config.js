@@ -12,16 +12,7 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 });
 
 module.exports = withTM(withBundleAnalyzer(withMDX({
-  async exportPathMap() {
-    let pages = {
-      '/': { page: '/' },
-      '/posts/sample': { page: '/posts/sample' },
-      '/posts/drafts/introducing-barbq': { page: '/posts/introducing-barbq' }
-    };
-
-    return pages;
-}
-, pageExtensions : [ 'jsx', 'js', 'mdx' ],
+pageExtensions : [ 'jsx', 'js', 'mdx' ],
                    transpileModules
     : ['bs-platform', 'bs-css', 'bsc-stdlib-polyfill'],
       webpack(config, options) {

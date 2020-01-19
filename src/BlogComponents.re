@@ -242,16 +242,18 @@ module Ol = {
             const children_ = [...children];
             return children_.map(child => {
               const nextChildrenLength = child.props.children.length;
-              return (<li id={child.props.id}>
-              { child.props.children.map((inner, i) => {
-                if (i === nextChildrenLength-1) {
-                  return f(inner.props.children, inner.props.href);
-                } else {
-                  return inner;
-                }
+              return (
+                 React.createElement("li",
+                                     { "id": child.props.id },
+                 child.props.children.map((inner, i) => {
+                  if (i === nextChildrenLength-1) {
+                    return f(inner.props.children, inner.props.href);
+                  } else {
+                    return inner;
+                  }
               })
-              }
-              </li>);
+                 )
+                 );
             });
           });
         })()
