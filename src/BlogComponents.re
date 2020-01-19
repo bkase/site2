@@ -57,7 +57,7 @@ module H1 = {
         marginLeft(`px(-2)),
         media(
           MediaQuery.tablet,
-          [fontSize(Sizes.h1), marginBottom(`rem(6.5))],
+          [fontSize(Sizes.h1), marginBottom(`rem(6.375))],
         ),
       ]);
 
