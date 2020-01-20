@@ -42,6 +42,7 @@ let make =
       <link href="/static/reset.css" rel="stylesheet" />
       <meta property="og:title" content=title />
       <meta property="og:description" content=description />
+      <meta property="og:type" content="website"/>
       extraHead
     </Next.Head>
     <div> children </div>
