@@ -32,8 +32,13 @@ module Style = {
 
   let content =
     style([
-      paddingLeft(`rem(1.375)),
-      paddingRight(`rem(1.375)),
+      paddingLeft(`rem(1.0)),
+      paddingRight(`rem(1.0)),
+      media(
+        MediaQuery.halfTablet,
+        [paddingLeft(`rem(1.5)), paddingRight(`rem(1.5))],
+      ),
+
       media(
         MediaQuery.tablet,
         [paddingLeft(`rem(2.1875)), paddingRight(`rem(2.1875))],

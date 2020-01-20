@@ -95,13 +95,20 @@ let make = (~topLink) => {
         |> List.mapi((i, link) => {
              let unpagedLink = unpage(link);
              let topResolve = Option.value(topLink, ~default=`Home);
+
+             let extraStyles = if (i mod 2 == 0) {
+                          [Style.growOnSwitch];
+                        } else {
+                          [];
+                        };
+
              if (link == topResolve) {
                <li
                  key=unpagedLink
                  className=Css.(
                    merge([
                      Style.topLink(Option.is_none(topLink)),
-                     Style.growOnSwitch,
+                     ...extraStyles,
                    ])
                  )>
                  {ReasonReact.string(unpagedLink)}
@@ -112,11 +119,7 @@ let make = (~topLink) => {
                  className=Css.(
                    merge([
                      Style.otherLink,
-                     ...if (i mod 2 == 0) {
-                          [Style.growOnSwitch];
-                        } else {
-                          [];
-                        },
+                     ...extraStyles,
                    ])
                  )>
                  <a className=Style.navLink href={href(link)}>
