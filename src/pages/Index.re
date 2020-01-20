@@ -106,7 +106,7 @@ let make = () => {
     Some(Control.scrollable);
   });
 
-  <Page>
+  <Page title="Brandon Kase">
     <div
       className=Css.(
         style([

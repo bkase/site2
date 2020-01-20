@@ -46,14 +46,46 @@ module Style = {
 
 let () = SyntaxHighlighting.draw();
 
+module Metadata = {
+  type t = {description: option(string)};
+
+  module Processed = {
+    type t = {
+      description: string,
+      title: string,
+    };
+  };
+
+  module ChildrenItem = {
+    type inner = {children: string};
+    type t = {props: inner};
+  };
+
+  let process = (t: t, children: array(ChildrenItem.t)): Processed.t => {
+    let description =
+      switch (t.description) {
+      | None =>
+        failwith("Implement whenever there's a blog post with no description")
+      | Some(description) => description
+      };
+    let title = children[0].props.children;
+    {Processed.title, description};
+  };
+};
+
 [@react.component]
-let make = (~children) => {
+let make = (~meta: Metadata.t, ~children) => {
   React.useEffect(() => {
     Control.scrollable();
     None;
   });
 
-  <Page extraHead=BlogComponents.Katex.head>
+  let metadata: Metadata.Processed.t = Metadata.process(meta, children);
+
+  <Page
+    title={metadata.title}
+    description={metadata.description}
+    extraHead=BlogComponents.Katex.head>
     <div className=Style.page>
       <Nav topLink={Some(`Blog)} />
       <div className=Style.content>
@@ -71,7 +103,7 @@ let make = (~children) => {
             "img": BlogComponents.Img.make,
             "sup": BlogComponents.Sup.R.make,
           }>
-          children
+          {Obj.magic(children)}
         </Next.MDXProvider>
       </div>
     </div>

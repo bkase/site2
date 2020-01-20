@@ -1,5 +1,11 @@
 [@react.component]
-let make = (~children, ~extraHead=React.null) => {
+let make =
+    (
+      ~title,
+      ~description="Typed functional programming for life.",
+      ~children,
+      ~extraHead=React.null,
+    ) => {
   <>
     <Next.Head>
       <link rel="icon" href="/static/icon/favicon-32.png" sizes="32x32" />
@@ -34,6 +40,8 @@ let make = (~children, ~extraHead=React.null) => {
         rel="stylesheet"
       />
       <link href="/static/reset.css" rel="stylesheet" />
+      <meta property="og:title" content=title />
+      <meta property="og:description" content=description />
       extraHead
     </Next.Head>
     <div> children </div>
