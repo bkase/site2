@@ -35,14 +35,11 @@ let make =
         href="/static/icon/favicon-180.png"
         sizes="180x180"
       />
-      <link
-        href="https://cdn.jsdelivr.net/npm/@ibm/plex@4.0.2/css/ibm-plex.min.css"
-        rel="stylesheet"
-      />
       <link href="/static/reset.css" rel="stylesheet" />
       <meta property="og:title" content=title />
       <meta property="og:description" content=description />
       <meta property="og:type" content="website"/>
+      <link href="/static/fonts.css" rel="stylesheet" />
       extraHead
     </Next.Head>
     <div> children </div>
