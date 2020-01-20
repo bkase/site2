@@ -37,11 +37,11 @@ function loadFile(link, callback) {
 }
 
 exports.handler = async function(event, context) {
-  const buffer = await util.promisify(loadFile)("https://bkase.dev/static/wasm/hello.wasm");
+  const buffer = await util.promisify(loadFile)("https://wasmfunctions--dazzling-hugle-4a0b49.netlify.com/static/wasm/hello.wasm");
   const module = await WebAssembly.compile(buffer);
   const instance = await WebAssembly.instantiate(module);
   return {statusCode : 200, body : "Hello, World " + instance.exports.helloWorld()};
 };
 
-// exports.handler().then(console.log);
+exports.handler().then(console.log);
 
