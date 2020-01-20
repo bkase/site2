@@ -17,7 +17,7 @@ module Style = {
 
   let body =
     style([
-      maxWidth(`rem(16.25)),
+      maxWidth(`rem(14.25)),
       media(MediaQuery.halfTablet, [maxWidth(`rem(20.))]),
       media(MediaQuery.tablet, [maxWidth(`rem(33.75))]),
       media(
@@ -80,7 +80,7 @@ module Style = {
 
   let innerP =
     style([
-      maxWidth(`rem(13.75)),
+      maxWidth(`rem(12.5)),
       extraPMarginBottom,
       media(MediaQuery.halfTablet, [maxWidth(`rem(20.))]),
       media(MediaQuery.tablet, [maxWidth(`none)]),

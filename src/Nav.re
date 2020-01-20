@@ -112,7 +112,7 @@ let make = (~topLink) => {
                  className=Css.(
                    merge([
                      Style.otherLink,
-                     ...if (i mod 2 == 1) {
+                     ...if (i mod 2 == 0) {
                           [Style.growOnSwitch];
                         } else {
                           [];
