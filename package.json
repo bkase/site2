@@ -6,7 +6,7 @@
     "dev:reason": "bsb -clean-world -make-world -w",
     "dev:next": "next dev -p 8000",
     "clean": "bsb -clean-world",
-    "build": "bsb -make-world && yarn gen-rss && next build",
+    "build": "bsb -make-world || yarn gen-rss && bsb -make-world && next build",
     "export": "yarn build && next export",
     "start": "next start -p 8000",
     "gen-rss": "node -r esm gen-rss.js"
