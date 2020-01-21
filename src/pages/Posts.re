@@ -36,7 +36,8 @@ module Style = {
         [
           maxWidth(`vw(100.)),
           display(`flex),
-          marginTop(`rem(6.)),
+          // using paddingTop not marginTop since marginTop screws up body
+          paddingTop(`rem(6.)),
           paddingLeft(`zero),
           paddingRight(`zero),
         ],
