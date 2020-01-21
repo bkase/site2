@@ -5,7 +5,7 @@
     "dev": "concurrently 'yarn dev:reason' 'yarn dev:next'",
     "dev:reason": "bsb -clean-world -make-world -w",
     "dev:next": "next dev -p 8000",
-    "clean": "bsb -clean-world",
+    "clean": "bsb -clean-world && rm -rf src/gen && rm -rf public/static/blog-rss.xml",
     "build": "bsb -make-world || yarn gen-rss && bsb -make-world && next build",
     "export": "yarn build && next export",
     "start": "next start -p 8000",
