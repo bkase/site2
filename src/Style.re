@@ -26,6 +26,11 @@ module Colors = {
   let green = `hex("1B998B");
   let orange = `hex("FC9E4F");
 
+  module Content = {
+    let linkAccent = green;
+    let copy = navy(1.);
+  };
+
   module Code = {
     let comment = navy(0.25);
     let punctuation = black;
@@ -37,6 +42,19 @@ module Colors = {
     let function_ = black;
     let variable = black;
   };
+};
+
+module P = {
+  open Css;
+
+  let base =
+    style([
+      alignItems(`baseline),
+      Typeface.pragmata,
+      lineHeight(`abs(1.4)),
+    ]);
+
+  let withBottom = merge([base, style([marginBottom(`em(1.0))])]);
 };
 
 module MediaQuery = {

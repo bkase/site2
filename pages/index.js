@@ -1,2 +1,1 @@
-export { make as default } from '@reason/pages/Index'
-
+export {make as default} from '@reason/pages/Index'

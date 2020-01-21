@@ -5,3 +5,4 @@ lib/
 .merlin
 *.gen.js
 public/static/blog-rss.xml
+src/gen/

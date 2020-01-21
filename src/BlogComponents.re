@@ -88,15 +88,7 @@ module H2 =
     let element = <h2 className />;
   });
 
-let pStyle =
-  style([
-    alignItems(`baseline),
-    Typeface.pragmata,
-    lineHeight(`abs(1.4)),
-    marginBottom(`em(1.0)),
-  ]);
-
-let bodyStyle = merge([pStyle, style([fontSize(Sizes.body)])]);
+let bodyStyle = merge([P.withBottom, style([fontSize(Sizes.body)])]);
 
 let changedSize = size =>
   style(
@@ -109,29 +101,6 @@ let changedSize = size =>
     | `CustomRem(rems) => [fontSize(`rem(rems))]
     },
   );
-
-module P = {
-  include Wrap({
-    let className = bodyStyle;
-    let element = <p className />;
-  });
-
-  let className' = pStyle;
-
-  module R = (FontChange: {let config: [ | `Smaller | `Bigger];}) => {
-    [@react.component]
-    let make = (~className="", ~children) => {
-      <p
-        className={merge([
-          className',
-          className,
-          changedSize(FontChange.config),
-        ])}>
-        children
-      </p>;
-    };
-  };
-};
 
 module A = {
   include Wrap({
@@ -162,7 +131,7 @@ module Sup = {
   include Wrap({
     let className =
       merge([
-        pStyle,
+        P.withBottom,
         style([color(Style.Colors.green), hover([textDecoration(`none)])]),
       ]);
     let element = <sup className />;
@@ -320,7 +289,7 @@ module Code =
   Wrap({
     let className =
       merge([
-        pStyle, // for some reason rems are interpretted differently here :(
+        P.withBottom, // for some reason rems are interpretted differently here :(
         style([
           display(`block),
           overflow(`scroll),
@@ -342,3 +311,26 @@ module Code =
 
     let element = <CodeBlock extraClassName=className className />;
   });
+
+module P = {
+  include Wrap({
+    let className = bodyStyle;
+    let element = <p className />;
+  });
+
+  let className' = P.withBottom;
+
+  module R = (FontChange: {let config: [ | `Smaller | `Bigger];}) => {
+    [@react.component]
+    let make = (~className="", ~children) => {
+      <p
+        className={merge([
+          className',
+          className,
+          changedSize(FontChange.config),
+        ])}>
+        children
+      </p>;
+    };
+  };
+};
