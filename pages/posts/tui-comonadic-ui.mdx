@@ -1,0 +1,265 @@
+import Page from '@reason/pages/Posts.bs'; export default Page;
+
+export const meta = {
+  date: "2020-01-24T09:26:46.446Z",
+  description: "TODO write me"
+};
+
+# TUI-backed Comonadic UI
+
+User interfaces are annoying to write and specify. Typically you either must constrain yourself to some specific mental model or suffer imperative side-effect-filled glue code. Comonads are the missing-link. Comonads unify all popular UI paradigms.
+
+## Background
+
+Phil Freeman introduced comonadic UI with a proof of concept React backend...
+
+
+## The Gist
+
+* I ported that over for TUIs; and made a few more types parametrically polymorphic in attempt for it to be more general-purpose
+
+## The Deepdive
+
+What follows is an attempt to explain [Framework.hs](https://github.com/bkase/barbq/blob/78174a4f84d77f0ce15a88406eb3b08e97c59831/Barbq/UI/Framework.hs) from [barbq](/posts/introducing-barbq). It doesn't make any assumptions on the concrete types of events, actions, or views so it should be easily extractable for use in other projects. I also will repeat a lot of what Freeman talks about in his articles in my own worlds. Make sure you read his posts for another perspective. Stand on the shoulders of giants!
+
+I will skip over the prefix and a porting of some support code from some Purescript libraries. In addition, I'm stripping most comments from the code so we can use longer prose. One thing to note is I've used the Prelude replacement [Relude](https://hackage.haskell.org/package/relude), so if you're not, you may need to make some changes here or there in your own projects.
+
+```haskell
+type Handler a s = a -> Endo s
+```
+
+`Handler`s specify state changes `Endo s`[^1] in response to actions `a`.
+
+```haskell
+newtype UI a e v = UI (forall s. (Handler a s -> Writer (Handler e s) v))
+```
+
+(TODO: A diagram maybe, not sure if needed?)
+
+The `UI` "at this moment" -- that is, this type does not capture any transitions to future different worlds (`Component` below does that). A `UI` uses a rank-2[^2] state `s` -- UIs have some "hidden" endofunctors for `s` (inside the handlers) that we can't inspect when creating a `UI`, but can use to help our UI runtime machinery (and you'll see later how we use this). Underneath, it's similar to an Elm-style UI component -- given a way to fire off actions to perturbe the configuration of the `s` (the `Handler a s`), we create a "view" `v`. Rather than a bare `v` though, we also can optionally react (by changing state) to some incoming event `e` -- this is captured in the `Writer (Handler e s)` part. Read about another use of the Writer monad in a [prior post](TODO). Here we're using Writer as a convenient way to hide an auxilary handler.
+
+```haskell
+instance Profunctor (UI a) where
+
+  lmap :: forall a v e1 e2. (e2 -> e1) -> UI a e1 v -> UI a e2 v
+  lmap f (UI ui) = UI $ \send -> mapWriter writerMap (ui send)
+    where
+      writerMap :: (v, Handler e1 s) -> (v, Handler e2 s)
+      writerMap (img, r) = (img, r <<< f)
+
+  rmap :: forall a e v1 v2. (v1 -> v2) -> UI a e v1 -> UI a e v2
+  rmap f (UI ui) = UI $ fmap f . ui
+```
+
+UIs form profunctors[^3] with the backwards `lmap` over events and forwards `rmap` over views. These maps come in handy!
+
+```haskell
+newtype Component' w m e v = Component' (w (UI (m ()) e v))
+```
+
+The verbose form of a component `Component'` is a space of all possible future instantaneous UIs with a pointer at the current one (the comonad[^3.5] `w` wrapper) where UIs perform actions in some monad `m`. In order to explore the space we'll need `w` and `m` to pair[^4] with each other.
+
+This series of diagrams may be enlightening:
+
+(TODO: A diagram showing w (UI ...) with UIs in circles in a graph, and an arrow or somehting pointing to one of them. Caption: This is the current configuration of the UI (draw a blinky text with diff colots or something))
+
+
+(TODO: A diragram showing the circles with the `m` arrow highlighted. Caption: Applying some pairing `m` action lets us transport to another position in the space.)
+
+(TODO: A diagram showing the state we transported to, without the circles. Caption: After applying the pairing we anihalate the `w` so we're left with a UI in that configuration. Later we'll see how we can use the hidden `forall s` in UI to make these actions repeatable)
+
+
+```haskell
+instance Newtype (Component' w m e v) (w (UI (m ()) e v))
+```
+
+Newtype gives us nice combinators to effectively pretend that we have the naked versions of the types, even though we have wrapped up ones so we can define type class instances.
+
+```haskell
+instance Functor w => Profunctor (Component' w m) where
+  dimap f g (Component' c1) = Component' $ dimap f g <$> c1
+```
+
+Since `UI a` is a `Profunctor`, if we can map over the `w`s, we'll be left with something we can also `dimap` over. This will also come in handy later.
+
+```haskell
+type Component w e v = Component' w (Co w) e v
+```
+
+It turns out there's a unique "best" monad that pairs with every comonad and it can be mechanically generated, let's call it `Co w`.[^5] With that, we can drop one type parameter and no longer pass an explicit pairing witness around (which trust me, is annoying).
+
+From now on, I'll omit implementations, but please check the [source]() if you're interested.
+
+```haskell
+componentMapAction
+  :: forall m1 m2 w e v. Functor w
+  => (m1 () -> m2 ())
+  -> Component' w m1 e v
+  -> Component' w m2 e v
+```
+
+Additionally, we can covariantly (forwards) map over actions in our components, but the forward map on views is more useful, so I picked that one for the profunctor instance.
+
+Then we can compose `Component`s in two ways:
+
+```haskell
+combine
+  :: forall w1 w2 e v. Comonad w1
+  => Comonad w2
+  => (forall a. UI a e v -> UI a e v -> UI a e v)
+  -> Component w1 e v
+  -> Component w2 e v
+  -> Component (Day w1 w2) e v
+```
+
+Given a way to combine two UIs at some moment, and two components, we can create a single component that performs actions over both (a sort of product of components).[^7] This is how we place components as siblings with one another.
+
+```haskell
+liftLeft  :: forall w w' a. Functor w => Comonad  w' => Co w a -> Co (Day w w') a
+
+liftRight :: forall w w' a. Functor w => Comonad  w' => Co w a -> Co (Day w' w) a
+```
+
+We can use liftLeft and liftRight to forward actions to each of the inner components.
+
+Now that we have products, so we also need sums. `Day` is our product and that already is defined for us, but the dual isn't:
+
+```haskell
+data Choice f g a = Choice Bool (f a) (g a)
+```
+
+If the bool is `True` we'll choose `f a` and if it's false `g a`.
+
+```haskell
+instance (Functor f, Functor g) => Functor (Choice f g)
+instance (Comonad f, Comonad g) => Comonad (Choice f g)
+```
+
+This is how we take sums of comonads.
+
+```haskell
+stack
+  :: forall w1 w2 e1 e2 v. Comonad w1
+  => Comonad w2
+  => Component w1 e1 v
+  -> Component w2 e2 v
+  -> Component (Choice w1 w2) (e1, e2) v
+```
+
+We can use `stack` to choose either to show one component or another. The `Component (Choice w1 w2) (e1,e2) v` effectively is the sum of the two input components.
+
+```haskell
+liftTrue :: forall f g a. (Functor f, Functor g) => Co f a -> Co (Choice f g) a
+liftFalse :: forall f g a. (Functor f, Functor g) => Co g a -> Co (Choice f g) a
+```
+
+Again we can lift our actions to either side of the sum.
+
+```haskell
+moveTrue :: forall f g. (Comonad f, Functor g) => Co (Choice f g) ()
+moveFalse :: forall f g. (Comonad g, Functor f) => Co (Choice f g) ()
+```
+
+And we can also create actions that specifically move us to either the true or false side of the stack.
+
+That's it! In order to use this thing, you'll also need to implement `explore` specific to your backend. Here's an example with the [`vty` terminal Haskell backend](https://github.com/bkase/barbq/blob/78174a4f84d77f0ce15a88406eb3b08e97c59831/Barbq/UI/Runtime.hs).
+
+First some monads:
+
+```haskell
+newtype RenderM a = RenderM (ReaderT V.Vty IO a)
+  deriving (Functor, Applicative, Monad, MonadReader V.Vty, MonadIO)
+```
+
+Our render monad has a context of a `Vty` instance under `IO`.
+
+```haskell
+type BackendM = Pipes.Consumer (Maybe e) RenderM
+```
+
+Our backend monad extends the render monad with the ability to await[^8] asynchronously for events (or `Nothing` when we're ready to stop).
+
+And the backend exploration of components:
+
+```haskell
+explore :: forall w m e.
+    Comonad w =>
+    Pairing w m ->
+    Component' w m e V.Image ->
+    BackendM ()
+```
+
+Explore takes a pairing witness (which we can generate for free with a non-ticked `Component`) and  a component over `Vty` images and gives us our backend monad that can actually run our application with side-effects. This means drawing to the screenand reacting to events to change what we draw.
+
+I'd like to attempt to explain how this works with a series of diagrams and then by slowly going over the implementation.
+
+Note: Despite using [Freeman's React explore as a guide](TODO), this function was very difficult for me to get right -- it was not a "it compiles it works" function either -- I implemented this incorrectly and stared at it for a very very long time before doing it properly. It will likely not be very easy to understand even with my best explanation.
+
+(TODO: A diagram with the circles again, same starting state as before)
+
+(TODO: A diagram with the arrows being `send` this time, somehow showing the timer event `e` coming in and that being the arrow.)
+
+(TODO: Duplicate diagram, circles in circles. So the unwrapping works later)
+
+(TODO: A diagram with the circles again, but this time the ending is still in the circles. Caption: We keep our comonadic wrapper, we end up still in a Component)
+
+```haskell
+explore pair space = do
+  let (img, runner) ::
+      (V.Image, Handler e (Component' w m e V.Image)) = render space
+  vty <- lift ask
+  liftIO $ V.update vty (V.picForImage img)
+  e <- await
+  (* ... *)
+```
+
+We'll define `render` later -- but this gets the instantaneous UI's view and event handler "runner" out. Then effectfully render the view to the terminal and awaits a further event.
+
+I've included the type-ascription on the first line to highlight something interesting. We're using the `s` to refer to the component type! In effect, we're treating `UI` and `Component'` as mutually recursive. This is how we can drive the application "forever".
+
+```haskell
+explore pair space = do
+  (* ... *)
+  case e of
+    Nothing -> return ()
+    Just e -> explore pair (appEndo (runner e) space)
+```
+
+When we recieve an event, let's interpret `Nothing` as stopping the program and `Just e` continues by firing our event handler on `e` to get the `Component` transition (when appliying to the old space we get the new space) and then recurse.
+
+```haskell
+explore pair space = do
+  (* ... *)
+  where
+    render :: forall v. Component' w m e v -> (v, Handler e (Component' w m e v))
+    render space = let { (UI ui) = extract (unpack space) } in runWriter (ui send)
+    (* ... *)
+```
+
+Render `extract`s the UI from the component and then fees a handler `send` (defined below) to get back the view and the event handler at this moment (extracted with `runWritier`).
+
+```haskell
+explore pair space = do
+  (* ... *)
+  where
+    (* ... *)
+    send :: forall v. m () -> Endo (Component' w m e v)
+    send action =
+      Endo $ over Component' $ pair (const id) action <<< duplicate
+```
+
+Finally, `send` takes our action and produces the component state change by duplicating the comonad (so we end up in the Component after anihilation), and performing a trivial (`id`) anihilation with `pair`.
+
+Hopefully that makes sense a little :shrug:. Again please refer to the code! The coolest thing is that this isn't just an interesting theory. I used this in [Barbq](TODO) to make a useful product with a GUI -- while I didn't need any interactivity, I believe this system will still scale to that without much problems.
+
+(Probably a conclusiion?)
+
+
+[^1]: `Endo a` is the monoid in Hask $(\middledot, a \rightarrow a)$, in other words, endofunctions with `<>` being function composition. This will come in handy over the naked `s -> s` later.
+[^2]: The rank-2 aspect is the forall to the right-hand side of the equals. Effectively, this lets us existentially quantify state. In other words, while rank-1 type variables (the `a`, `e`, and `v` in `UI` above) constrain the creator of a type and free callers to pick whatever they like. Rank-2 types free creators to pick whatever they like and constrain callers to speak only abstractly over that type variable.
+[^3]: Profunctors are contravariant functors over the first parameter (you can backwards `map` over it) -- the `lmap`, and functors over the other parameter (you can forwards `map` over it) -- the `rmap`. Alternatively, you can define profunctors with a single `dimap` that combines both the backwards and forwards mapping into one function.
+[^3.5]: A Comonad is the dual (ie flipping the arrows) of a monad. The best intuition I have for Comonads are UI components (ie. this example).
+[^4]: Pairings are two functors that anhilate one-another. One definition: `type Pairing f g = forall a b c. (a -> b -> c) -> f a -> g b -> c` -- combining an `f` wrapped thing and `g` wrapped thing give me an unwrapped output.
+[^5]: It's not obvious that this would be possible, and a fun exercise to play with. Given `newtype Co w a = Co (forall r. w (a -> r) -> r)`, try to write `bind`, `map` and `pure` for this. See [Control.Monad.Co](http://hackage.haskell.org/package/kan-extensions-5.2/docs/Control-Monad-Co.html) for a full implementation as a monad transformer in Haskell.
+[^6]: `Day f g` has a subtley different type signature than a `Pairing f g`: `data Day f g c = forall a b. Day (f a) (g b) (a -> b -> c)`, the only difference is the `c` is rank-1 and we're capturing the parameters rather than "calling" the underlying function. In a way it's like a suspended pairing, it performs the same thing: anhilation of effects `f` and `g`. I [tweeted](https://twitter.com/bkase_/status/1220260931092901888) about this because I thought it was cool. `Day` here is used as a was to take the product of two comonads in a way where we still end up with a comonad as `(Comonad w1, Comonad w2) => Comonad (Day w1 w2)`.
+[^7]: See the [pipes](https://hackage.haskell.org/package/pipes-4.0.0/docs/Pipes-Core.html#t:Consumer) library for more on `Consumer`, but effectively it just gives your monad magical powers to `await` for values (in the coroutine sense).
