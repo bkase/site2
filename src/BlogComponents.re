@@ -247,12 +247,22 @@ module Ol = {
   };
 };
 
-module Img =
-  Wrap({
-    let className = style([width(`percent(100.))]);
+module Img = {
+  let className = style([width(`percent(100.))]);
+
+  include Wrap({
+    let className = className;
 
     let element = <img className />;
   });
+
+  module R = {
+    [@react.component]
+    let make = (~alt, ~src) => {
+      <img className alt src />;
+    };
+  };
+};
 
 module Hr =
   Wrap({
@@ -311,6 +321,33 @@ module Code =
 
     let element = <CodeBlock extraClassName=className className />;
   });
+
+module Figure = {
+  let barStyle =
+    style([
+      display(`flex),
+      before([
+        unsafe("content", "'.'"),
+        width(`rem(0.625)),
+        flex(`none),
+        display(`block),
+        backgroundColor(Style.Colors.navy(0.25)),
+        marginRight(`rem(1.)),
+        marginBottom(`rem(1.5)),
+      ]),
+    ]);
+
+  [@react.component]
+  let make = (~alt, ~href, ~children) => {
+    <figure>
+      <Img.R alt src=href />
+      <div
+        className={style([display(`flex), justifyContent(`spaceBetween)])}>
+        <figcaption className=barStyle> children </figcaption>
+      </div>
+    </figure>;
+  };
+};
 
 module P = {
   include Wrap({
