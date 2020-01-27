@@ -263,7 +263,7 @@ This is the best solution! There is no global mutable state. There is no boilerp
 
 ## Summary
 
-Writer monads provide a boilerplate-free, thread-safe, non-error-prone way to propagate knowledge through large swaths of a codebase. In Coda, we used the `Deferred_with_track_generated` monad to propagate knowledge that some generation occurs to give developers a transparent way to keep their code as compatible as possible with other builds to make them more productive.
+Writer monads provide a boilerplate-free, thread-safe, non-error-prone way to propagate knowledge through large swaths of a codebase. In Coda, we used the Deferred `with_track_generated` monad to propagate knowledge that some generation occurs to give developers a transparent way to keep their code as compatible as possible with other builds to make them more productive.
 
 Thank you [Christina Lee](https://twitter.com/RunChristinaRun) and [Omer Zach](https://twitter.com/omerzach) for your thoughtful reviews on this&nbsp;post!
 
@@ -280,4 +280,4 @@ Thank you [Christina Lee](https://twitter.com/RunChristinaRun) and [Omer Zach](h
 [^11]: The monoid being strings with concatenation for example
 [^12]: I'm using monad helpers from Jane Street's [base](https://opensource.janestreet.com/base/) library.
 [^13]: We do this manually in OCaml by convention rather than using monad-transformers like one would in Haskell.
-[^14]: That would be replacing `let open Deffered.Let_syntax in` with `let open Deferred_with_track_generated.Let_syntax in`, effectively moving from one monad to another.
+[^14]: That would be appending `_with_track_generated` in the let-deferred-let-synatx-open-in statements, effectively moving from one monad to another.
