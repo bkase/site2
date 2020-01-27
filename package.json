@@ -6,7 +6,7 @@
     "dev:reason": "bsb -clean-world -make-world -w",
     "dev:next": "next dev -p 8000",
     "clean": "bsb -clean-world && rm -rf src/gen && rm -rf public/static/blog-rss.xml",
-    "build": "bsb -make-world || yarn gen-rss && bsb -make-world && next build",
+    "build": "bsb -make-world || yarn gen-rss && bsb -make-world && next build && ./make_redirects.sh",
     "export": "yarn build && next export",
     "start": "next start -p 8000",
     "gen-rss": "node -r esm gen-rss.js"
