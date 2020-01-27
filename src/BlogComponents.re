@@ -57,7 +57,7 @@ module H1 = {
         marginLeft(`px(-2)),
         media(
           MediaQuery.tablet,
-          [fontSize(Sizes.h1), marginBottom(`rem(6.5))],
+          [fontSize(Sizes.h1), marginBottom(`rem(6.375))],
         ),
       ]);
 
@@ -88,15 +88,7 @@ module H2 =
     let element = <h2 className />;
   });
 
-let pStyle =
-  style([
-    alignItems(`baseline),
-    Typeface.pragmata,
-    lineHeight(`abs(1.4)),
-    marginBottom(`em(1.0)),
-  ]);
-
-let bodyStyle = merge([pStyle, style([fontSize(Sizes.body)])]);
+let bodyStyle = merge([P.withBottom, style([fontSize(Sizes.body)])]);
 
 let changedSize = size =>
   style(
@@ -109,29 +101,6 @@ let changedSize = size =>
     | `CustomRem(rems) => [fontSize(`rem(rems))]
     },
   );
-
-module P = {
-  include Wrap({
-    let className = bodyStyle;
-    let element = <p className />;
-  });
-
-  let className' = pStyle;
-
-  module R = (FontChange: {let config: [ | `Smaller | `Bigger];}) => {
-    [@react.component]
-    let make = (~className="", ~children) => {
-      <p
-        className={merge([
-          className',
-          className,
-          changedSize(FontChange.config),
-        ])}>
-        children
-      </p>;
-    };
-  };
-};
 
 module A = {
   include Wrap({
@@ -162,7 +131,7 @@ module Sup = {
   include Wrap({
     let className =
       merge([
-        pStyle,
+        P.withBottom,
         style([color(Style.Colors.green), hover([textDecoration(`none)])]),
       ]);
     let element = <sup className />;
@@ -242,16 +211,18 @@ module Ol = {
             const children_ = [...children];
             return children_.map(child => {
               const nextChildrenLength = child.props.children.length;
-              return (<li id={child.props.id}>
-              { child.props.children.map((inner, i) => {
-                if (i === nextChildrenLength-1) {
-                  return f(inner.props.children, inner.props.href);
-                } else {
-                  return inner;
-                }
+              return (
+                 React.createElement("li",
+                                     { "id": child.props.id },
+                 child.props.children.map((inner, i) => {
+                  if (i === nextChildrenLength-1) {
+                    return f(inner.props.children, inner.props.href);
+                  } else {
+                    return inner;
+                  }
               })
-              }
-              </li>);
+                 )
+                 );
             });
           });
         })()
@@ -318,7 +289,7 @@ module Code =
   Wrap({
     let className =
       merge([
-        pStyle, // for some reason rems are interpretted differently here :(
+        P.withBottom, // for some reason rems are interpretted differently here :(
         style([
           display(`block),
           overflow(`scroll),
@@ -340,3 +311,26 @@ module Code =
 
     let element = <CodeBlock extraClassName=className className />;
   });
+
+module P = {
+  include Wrap({
+    let className = bodyStyle;
+    let element = <p className />;
+  });
+
+  let className' = P.withBottom;
+
+  module R = (FontChange: {let config: [ | `Smaller | `Bigger];}) => {
+    [@react.component]
+    let make = (~className="", ~children) => {
+      <p
+        className={merge([
+          className',
+          className,
+          changedSize(FontChange.config),
+        ])}>
+        children
+      </p>;
+    };
+  };
+};

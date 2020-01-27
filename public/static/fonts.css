@@ -1,0 +1,18 @@
+@font-face {
+  font-family: "Arame";
+  src: url("/static/fonts/arame/ArameRegular.woff2") format("woff2"),
+       url("/static/fonts/arame/ArameRegular.woff") format("woff"),
+       url("/static/fonts/arame/ArameRegular.ttf") format("truetype");
+  font-weight: "normal";
+  font-style: "normal";
+}
+
+@font-face {
+  font-family: "PragmataPro";
+  src: local("PragmataPro"),
+       url("/static/fonts/essential-pragmatapro/EssentialPro.woff2") format("woff2"),
+       url("/static/fonts/essential-pragmatapro/EssentialPro.woff") format("woff");
+  font-weight: "normal";
+  font-style: "normal";
+}
+

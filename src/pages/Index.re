@@ -17,7 +17,7 @@ module Style = {
 
   let body =
     style([
-      maxWidth(`rem(16.25)),
+      maxWidth(`rem(14.25)),
       media(MediaQuery.halfTablet, [maxWidth(`rem(20.))]),
       media(MediaQuery.tablet, [maxWidth(`rem(33.75))]),
       media(
@@ -32,8 +32,13 @@ module Style = {
 
   let content =
     style([
-      paddingLeft(`rem(1.375)),
-      paddingRight(`rem(1.375)),
+      paddingLeft(`rem(1.0)),
+      paddingRight(`rem(1.0)),
+      media(
+        MediaQuery.halfTablet,
+        [paddingLeft(`rem(1.5)), paddingRight(`rem(1.5))],
+      ),
+
       media(
         MediaQuery.tablet,
         [paddingLeft(`rem(2.1875)), paddingRight(`rem(2.1875))],
@@ -80,7 +85,7 @@ module Style = {
 
   let innerP =
     style([
-      maxWidth(`rem(13.75)),
+      maxWidth(`rem(12.5)),
       extraPMarginBottom,
       media(MediaQuery.halfTablet, [maxWidth(`rem(20.))]),
       media(MediaQuery.tablet, [maxWidth(`none)]),
@@ -106,7 +111,7 @@ let make = () => {
     Some(Control.scrollable);
   });
 
-  <Page>
+  <Page title="Brandon Kase">
     <div
       className=Css.(
         style([

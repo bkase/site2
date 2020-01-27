@@ -47,7 +47,7 @@ module Style = {
         [
           display(`block),
           marginLeft(`rem(4.875)),
-          paddingTop(`rem(2.125)),
+          paddingTop(`rem(2.3125)),
         ],
       ),
     ]);
@@ -74,10 +74,7 @@ let unpage = x =>
   | `Code => "CODE"
   };
 
-let otherPages = page => {
-  let x = Option.value(page, ~default=`Home);
-  [`Home, `Blog, `Videos, `Code] |> List.filter(x' => x != x');
-};
+let pages = [`Home, `Blog, `Videos, `Code];
 
 let href = page => {
   switch (page) {
@@ -94,42 +91,43 @@ let curry = (f, x, y) => f((x, y));
 let make = (~topLink) => {
   <ul className=Style.list>
     {ReasonReact.array(
-       {let bottomList =
-          otherPages(topLink)
-          |> List.mapi((i, link) => {
-               let unpagedLink = unpage(link);
+       {pages
+        |> List.mapi((i, link) => {
+             let unpagedLink = unpage(link);
+             let topResolve = Option.value(topLink, ~default=`Home);
+
+             let extraStyles = if (i mod 2 == 0) {
+                          [Style.growOnSwitch];
+                        } else {
+                          [];
+                        };
+
+             if (link == topResolve) {
+               <li
+                 key=unpagedLink
+                 className=Css.(
+                   merge([
+                     Style.topLink(Option.is_none(topLink)),
+                     ...extraStyles,
+                   ])
+                 )>
+                 {ReasonReact.string(unpagedLink)}
+               </li>;
+             } else {
                <li
                  key=unpagedLink
                  className=Css.(
                    merge([
                      Style.otherLink,
-                     ...if (i mod 2 == 1) {
-                          [Style.growOnSwitch];
-                        } else {
-                          [];
-                        },
+                     ...extraStyles,
                    ])
                  )>
                  <a className=Style.navLink href={href(link)}>
                    {ReasonReact.string(unpagedLink)}
                  </a>
                </li>;
-             });
-        {let topResolve = Option.value(topLink, ~default=`Home);
-         [
-           {let unpagedLink = unpage(topResolve);
-            <li
-              key=unpagedLink
-              className=Css.(
-                merge([
-                  Style.topLink(Option.is_none(topLink)),
-                  Style.growOnSwitch,
-                ])
-              )>
-              {ReasonReact.string(unpagedLink)}
-            </li>},
-           ...bottomList,
-         ]}
+             };
+           })
         |> Array.of_list},
      )}
   </ul>;

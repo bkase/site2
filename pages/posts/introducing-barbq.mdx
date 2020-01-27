@@ -1,0 +1,51 @@
+import Page from '@reason/pages/Posts.bs'; export default Page;
+
+export const meta = {
+  date: "2020-01-19T20:56:53.677Z",
+  description: "Barbq is a simple, no frills, terminal-based (TUI) status bar for macOS"
+};
+
+# Introducing Barbq
+
+TUIs[^1] for life. [Barbq](https://github.com/bkase/barbq) 🍖 is a TUI-based status-bar for macOS.
+
+![barbq status bar](/static/posts/introducing-barbq/barbq.png)
+
+Barbq is a simple, no frills, terminal-based status bar. I host it in an instance of alacritty terminal[^2] which I pin to the top of the screen using the yabai tiling window manager.
+
+![my environment](/static/posts/introducing-barbq/motivation.png)
+
+To be clear: The above is not a Linux system. I am running macOS 10.15. You're just seeing the wonderful kitty terminals, yabai window manager, and barbq status bar inside alacritty.
+
+## Features
+
+* Widgets for yabai tabs, internal/external ip addrs, volume, battery, wifi, date
+* Volume info grabbed via low-level C executable to avoid overhead of invoking osascript
+* Resource efficient[^3]
+* Modular and extensible[^4]
+* Stable enough that this author has been using barbq 100% of the time for over a month
+
+## Future work
+
+* Support other data sourcing methods in addition to interval-based polling[^5]
+* Cleaner and more usable layout methods for views
+* More refined UI work regarding, colors, positiong, margins, and unicode decorations
+
+## Installation
+
+For up-to-date installation instructions [visit the GitHub project](https://github.com/bkase/barbq).
+
+## Under the hood
+
+Barbq is written in Haskell. And is this author's first "real" Haskell project.
+
+Since this is a side-project, long-cuts[^6] were made in order to do things in an interesting manner. Look for future blog posts on the two interesting pieces here: (1) Using free applicative functors for creating model data to feed views and (2) building terminal-UI components in UI-paradigm-agnostic comonadic style.
+
+I welcome all code reviews! If you have any experience with Haskell, I'd appreciate feedback on my code. Please open an issue in the project to let me know!
+
+[^1]: Terminal User Interface
+[^2]: Alacritty is installed for you as a dependency when you build with Nix.
+[^3]: ~0.5% of CPU on my machine.
+[^4]: Through the editing of Haskell code.
+[^5]: Interrupts via HTTP server or mouse clicks for example.
+[^6]: The opposite of a shortcut.

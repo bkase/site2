@@ -1,6 +1,12 @@
 import Page from '@reason/pages/Posts'; export default Page;
 import HalfImageWrapper from '@reason/HalfImageWrapper';
 
+export const meta = {
+  date: "2020-01-27T04:11:10.195Z",
+  description: "Tracking knowledge across large areas of a codebase is a fairly common task. Keeping track of whether or not some cache miss happens when loading files is an example of this -- you could want to track this in a metric. If we model knowledge monoidally, we can use a writer monad to track this knowledge without boilerplate in a simple and threadsafe manner."
+};
+
+
 # Writer monads for cache misses in Ocaml
 
 Tracking knowledge across large areas of a codebase is a fairly common task. Keeping track of whether or not some cache miss happens when loading files is an example of this &mdash; you could want to track this in a metric. If we model knowledge monoidally, we can use a writer monad to track this knowledge without boilerplate in a simple and threadsafe manner.

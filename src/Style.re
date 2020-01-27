@@ -1,51 +1,4 @@
-module Typeface: {
-  let pragmata: Css.rule;
-  let arame: Css.rule;
-  let futura: Css.rule;
-} = {
-  let _arame: unit =
-    // bs-css font face doesn't support woff and woff2 annotations
-    Css.(
-      global(
-        "@font-face",
-        [
-          fontFamily("Arame"),
-          unsafe(
-            "src",
-            {|
-        local('Arame-Regular'),
-        url('/static/fonts/arame/ArameRegular.woff2') format('woff2'),
-        url('/static/fonts/arame/ArameRegular.woff') format('woff'),
-        url('/static/fonts/arame/ArameRegular.ttf') format('truetype');
-        |},
-          ),
-          fontWeight(`normal),
-          fontStyle(`normal),
-        ],
-      )
-    );
-
-  // fonts load via side-effect
-  let _pragmataPro: unit =
-    Css.(
-      global(
-        "@font-face",
-        [
-          fontFamily("PragmataPro"),
-          unsafe(
-            "src",
-            {|
-        local('PragmataPro'),
-        url('/static/fonts/essential-pragmatapro/EssentialPro.woff2') format('woff2'),
-        url('/static/fonts/essential-pragmatapro/EssentialPro.woff') format('woff');
-        |},
-          ),
-          fontWeight(`normal),
-          fontStyle(`normal),
-        ],
-      )
-    );
-
+module Typeface = {
   let pragmata = Css.fontFamily("PragmataPro, \"Courier New\", monospace");
   let arame = Css.fontFamily("Arame, sans-serif");
   let futura =
@@ -73,6 +26,11 @@ module Colors = {
   let green = `hex("1B998B");
   let orange = `hex("FC9E4F");
 
+  module Content = {
+    let linkAccent = green;
+    let copy = navy(1.);
+  };
+
   module Code = {
     let comment = navy(0.25);
     let punctuation = black;
@@ -84,6 +42,19 @@ module Colors = {
     let function_ = black;
     let variable = black;
   };
+};
+
+module P = {
+  open Css;
+
+  let base =
+    style([
+      alignItems(`baseline),
+      Typeface.pragmata,
+      lineHeight(`abs(1.4)),
+    ]);
+
+  let withBottom = merge([base, style([marginBottom(`em(1.0))])]);
 };
 
 module MediaQuery = {
