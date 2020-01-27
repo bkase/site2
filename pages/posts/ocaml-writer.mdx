@@ -267,8 +267,8 @@ Writer monads provide a boilerplate-free, thread-safe, non-error-prone way to pr
 
 Thank you [Christina Lee](https://twitter.com/RunChristinaRun) and [Omer Zach](https://twitter.com/omerzach) for your thoughtful reviews on this&nbsp;post!
 
-[^1]: Hundreds of megabytes in size
-[^2]: Kilobytes (TODO verify this) in size
+[^1]: In the low hundreds of megabytes in size
+[^2]: Less than a few kilobytes in size
 [^3]: Continuous integration
 [^4]: [Caches are monoids](https://www.youtube.com/watch?v=8uqXuEZLyUU), did you know?
 [^5]: If you really must know, we wanted to avoid implementing aws private-bucket uploading logic in OCaml just to support this one feature. So we want to shell out to the `aws` CLI tool. We also don't want to require devs to have access to the private S3 bucket as Coda is an open source project. Only CI needs write access. So as a hack, when built on CI, the build fails in a strategic location after all SNARK related generation logic is finished.
