@@ -9,6 +9,7 @@ const React = require('react');
 const mdxReact = require('@mdx-js/react');
 const mdxRuntime = require('@mdx-js/runtime');
 
+// extra components
 const Figure = function({alt, href, children}) {
   return React.createElement("div", [], [
     React.createElement("img",
@@ -16,6 +17,9 @@ const Figure = function({alt, href, children}) {
     React.createElement("p", [], children)
   ]);
 };
+
+const HalfImageWrapper = function({children}) { return children; };
+const _HalfImageWrapper = HalfImageWrapper;
 
 function requireFromStringSync(src, filename) {
   const Module = module.constructor;
@@ -96,8 +100,9 @@ function scanDir(dirPath, extension) {
 function readPostMetadata(postPath) {
   const[mod, ast] = requireMDXFileSync(postPath);
   const content = ReactDOMServer.renderToString(
-      React.createElement(mdxReact.MDXProvider, [],
-                          mod.default({components : [ {"Figure" : Figure} ]})));
+      React.createElement(mdxReact.MDXProvider, [], mod.default({
+        components : {"HalfImageWrapper" : HalfImageWrapper, "Figure" : Figure}
+      })));
   const {meta} = mod;
   const title = (meta && meta.title)
                     ? meta.title

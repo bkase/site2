@@ -104,6 +104,7 @@ let make = (~meta: Metadata.t, ~children) => {
             "img": BlogComponents.Img.make,
             "sup": BlogComponents.Sup.R.make,
             "Figure": BlogComponents.Figure.make,
+            "HalfImageWrapper": HalfImageWrapper.make,
           }>
           {Obj.magic(children)}
         </Next.MDXProvider>
