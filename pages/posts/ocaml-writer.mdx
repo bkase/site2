@@ -1,13 +1,12 @@
-import Page from '@reason/pages/Posts'; export default Page;
-import HalfImageWrapper from '@reason/HalfImageWrapper';
+import Page from '@reason/pages/Posts.bs'; export default Page;
 
 export const meta = {
-  date: "2020-01-27T04:11:10.195Z",
+  date: "2020-01-27T05:45:08.262Z",
   description: "Tracking knowledge across large areas of a codebase is a fairly common task. Keeping track of whether or not some cache miss happens when loading files is an example of this -- you could want to track this in a metric. If we model knowledge monoidally, we can use a writer monad to track this knowledge without boilerplate in a simple and threadsafe manner."
 };
 
 
-# Writer monads for cache misses in Ocaml
+# Writer monads for knowledge tracking in OCaml
 
 Tracking knowledge across large areas of a codebase is a fairly common task. Keeping track of whether or not some cache miss happens when loading files is an example of this &mdash; you could want to track this in a metric. If we model knowledge monoidally, we can use a writer monad to track this knowledge without boilerplate in a simple and threadsafe manner.
 
@@ -281,4 +280,4 @@ Thank you [Christina Lee](https://twitter.com/RunChristinaRun) and [Omer Zach](h
 [^11]: The monoid being strings with concatenation for example
 [^12]: I'm using monad helpers from Jane Street's [base](https://opensource.janestreet.com/base/) library.
 [^13]: We do this manually in OCaml by convention rather than using monad-transformers like one would in Haskell.
-[^14]: That's would be replacing `let open Deffered.Let_syntax in` with `let open Deferred_with_track_generated.Let_syntax in`, effectively moving from one monad to another.
+[^14]: That would be replacing `let open Deffered.Let_syntax in` with `let open Deferred_with_track_generated.Let_syntax in`, effectively moving from one monad to another.
