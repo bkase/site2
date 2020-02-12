@@ -12,6 +12,9 @@ const mdxRuntime = require('@mdx-js/runtime');
 const HalfImageWrapper = function({children}) { return children; };
 const _HalfImageWrapper = HalfImageWrapper;
 
+const MultiCodeBlock = function({children}) { return children; };
+const _MultiCodeBlock = MultiCodeBlock;
+
 function requireFromStringSync(src, filename) {
   const Module = module.constructor;
   const m = new Module();
@@ -90,9 +93,13 @@ function scanDir(dirPath, extension) {
 
 function readPostMetadata(postPath) {
   const[mod, ast] = requireMDXFileSync(postPath);
-  const content = ReactDOMServer.renderToString(React.createElement(
-      mdxReact.MDXProvider, [],
-      mod.default({components : {"HalfImageWrapper" : HalfImageWrapper}})));
+  const content = ReactDOMServer.renderToString(
+      React.createElement(mdxReact.MDXProvider, [], mod.default({
+        components : {
+          "HalfImageWrapper" : HalfImageWrapper,
+          "MultiCodeBlock" : MultiCodeBlock
+        }
+      })));
   const {meta} = mod;
   const title = (meta && meta.title)
                     ? meta.title

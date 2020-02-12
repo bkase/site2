@@ -2547,6 +2547,12 @@ bs-platform@^7.0.1:
   resolved "https://registry.yarnpkg.com/bs-platform/-/bs-platform-7.0.1.tgz#1d7b0ef6088b998dceee5db74a7cd8f01c20a3bd"
   integrity sha512-UjStdtHhbtC/l6vKJ1XRDqrPk7rFf5PLYHtRX3akDXEYVnTbN36z0g4DEr5mU8S0N945e33HYts9x+i7hKKpZQ==
 
+bs-refmt@glennsl/bs-refmt:
+  version "0.3.0"
+  resolved "https://codeload.github.com/glennsl/bs-refmt/tar.gz/19f3f595a08597f0bcbebdf1c46ec8b5c4e8c001"
+  dependencies:
+    reason "^3.1.0"
+
 bsc-stdlib-polyfill@Schmavery/bsc-stdlib-polyfill:
   version "0.0.1"
   resolved "https://codeload.github.com/Schmavery/bsc-stdlib-polyfill/tar.gz/b6e9bde87e80363572aa969b7af9c02ccfabe9de"
@@ -6631,6 +6637,11 @@ reason-react@^0.7.0:
   dependencies:
     react ">=16.8.1"
     react-dom ">=16.8.1"
+
+reason@^3.1.0:
+  version "3.3.4"
+  resolved "https://registry.yarnpkg.com/reason/-/reason-3.3.4.tgz#a294ef8aa14fa85c6fd8a7db5dcab053f2382f68"
+  integrity sha512-WwXkrcwbUUazf0pEn7Vrd0R7wKOMEPmn4ZBb0ffKCxKiqoUh13E8hnSEhytNM81vl3O3A0ENyZa+Ys0fMnJgnw==
 
 reflect.ownkeys@^0.2.0:
   version "0.2.0"
