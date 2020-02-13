@@ -34,7 +34,7 @@ let draw = () => {
   global(".token-line:last-of-type", [display(`none)]);
 
   global(
-    ".token-line:first-child:nth-last-child(n + 9), .token-line:first-child:nth-last-child(n + 9) ~ .token-line",
+    ".token-line:first-child:nth-last-child(n + 11), .token-line:first-child:nth-last-child(n + 11) ~ .token-line",
     [before([width(`em(1.0))])],
   );
 
