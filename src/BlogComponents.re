@@ -79,16 +79,24 @@ module H2 =
         display(`flex),
         alignItems(`baseline),
         Typeface.pragmata,
-        fontSize(`px(38)),
+        fontSize(`px(29)),
         fontWeight(`normal),
         marginBottom(`rem(1.0)),
         paddingTop(`rem(0.5)),
         paddingBottom(`rem(0.5)),
+        media(MediaQuery.tablet, [fontSize(`px(38))]),
       ]);
     let element = <h2 className />;
   });
 
-let bodyStyle = merge([P.withBottom, style([fontSize(Sizes.body)])]);
+let bodyStyle =
+  merge([
+    P.withBottom,
+    style([
+      fontSize(Sizes.Mobile.body),
+      media(MediaQuery.tablet, [fontSize(Sizes.body)]),
+    ]),
+  ]);
 
 let changedSize = size =>
   style(
@@ -98,7 +106,10 @@ let changedSize = size =>
         media(MediaQuery.tablet, [fontSize(Sizes.body)]),
       ]
     | `Bigger => [fontSize(Sizes.body)]
-    | `CustomRem(rems) => [fontSize(`rem(rems))]
+    | `CustomRem(mobile, larger) => [
+        fontSize(`rem(mobile)),
+        media(MediaQuery.tablet, [fontSize(`rem(larger))]),
+      ]
     },
   );
 
@@ -115,7 +126,7 @@ module A = {
   module R =
          (
            FontChange: {
-             let config: [ | `Smaller | `Bigger | `CustomRem(float)];
+             let config: [ | `Smaller | `Bigger | `CustomRem(float, float)];
            },
          ) => {
     [@react.component]
@@ -131,7 +142,7 @@ module Sup = {
   include Wrap({
     let className =
       merge([
-        P.withBottom,
+        bodyStyle,
         style([color(Style.Colors.green), hover([textDecoration(`none)])]),
       ]);
     let element = <sup className />;
@@ -139,7 +150,7 @@ module Sup = {
 
   module A =
     A.R({
-      let config = `CustomRem(1.25);
+      let config = `CustomRem((1., 1.125));
     });
   module R = {
     [@react.component]
@@ -173,7 +184,7 @@ module Ol = {
 
   module A =
     A.R({
-      let config = `Bigger;
+      let config = `CustomRem((1.25, 1.5));
     });
   module R = {
     [@react.component]
@@ -293,7 +304,7 @@ module Code =
         style([
           display(`block),
           overflow(`scroll),
-          fontSize(`px(24)),
+          fontSize(`px(18)),
           backgroundColor(Style.Colors.navy(0.03)),
           paddingLeft(`px(16)),
           paddingRight(`px(16)),
@@ -306,6 +317,7 @@ module Code =
             MediaQuery.halfTablet,
             [marginLeft(`px(-16)), marginRight(`zero)],
           ),
+          media(MediaQuery.tablet, [fontSize(`px(24))]),
         ]),
       ]);
 

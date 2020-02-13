@@ -16,7 +16,7 @@ module Sizes = {
   module Mobile = {
     let nav = `rem(2.0625); // 33px
     let h1 = `rem(3.); // 48px
-    let body = body; // 16px
+    let body = `rem(1.125); // 18px
   };
 };
 
