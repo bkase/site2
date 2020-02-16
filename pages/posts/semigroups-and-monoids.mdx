@@ -7,18 +7,18 @@ export const meta = {
 
 # Semigroups and Monoids
 
-If you ask someone who has interacted with me in the last five years to describe me, they may say: Brandon loves monoids. I do love monoids, and although I do think there are enough existing materials on the subject on the internet, I figured I should probably add my own take to the mix.[^1]
+If you ask someone who has interacted with me in the last five years to describe me, they may say: Brandon loves monoids. I do love monoids, and although I do think there are enough existing materials on the subject on the internet, I figured I should probably add my take to the mix.[^1]
 
 As engineers, we study algebraic structures (like semigroups and monoids) for a few reasons:[^2]
 
 1. Mathematics gives us an objective solution to "clean code" and API design &mdash; discovering the algebraic structure underlying the problem gives rise to a minimally complex and maximally expressive interface.
-2. These structures give names to incredibly abstract notions. Notions that we otherwise, as humans, would have a hard time discussing. When something has a name, our brains can reason about them. Shared vocabulary means more productivity for teams. Moreover, using these proper names introduces a ~hundred years of mathematics and computer science content for futher study.
+2. These structures give names to incredibly abstract notions. Notions that we otherwise, as humans, would have a hard time discussing. When something has a name, our brains can reason about them. Shared vocabulary means more productivity for teams. Moreover, using these proper names introduces a ~hundred years of mathematics and computer science content for further study.
 
-Semigroups and Monoids are the "20%" of algebraic objects that get you "80%" of the power. These are a functional programmers' basic building blocks: The abiliy to detect, digest, and discove them level you up as an engineer!
+Semigroups and Monoids are the "20%" of algebraic objects that get you "80%" of the power. These are a functional programmer's basic building blocks: The ability to detect, digest, and discover them levels you up as an engineer!
 
 Since I want this post to be maximally relevant to the audiences I think I'll reach, I'm preparing all code examples in OCaml, ReasonML, Haskell, and Swift throughout this post.
 
-## Alegbraic structures in programs
+## Algebraic structures in programs
 
 Algebraic structures in typed programming languages are defined by signatures/protocols/type-classes/interfaces. Instances of these structures are declared by conformances/instances of these signatures. In addition to those instances that don't type-check, the set of instances is further restricted by *laws* or equivalences between two programs which should always be true. For example, a structure with a *commutativity* law aka $\forall x,y. x \oplus y = y \oplus x$[^3] permits an implementation for $\oplus$ for integer multiplication but rejects matrix multiplication.[^4]
 
@@ -115,9 +115,9 @@ let all = x <> y <> z
 
 </MultiCodeBlock>
 
-On the otherhand, the machine can choose to schedule this work whenever it
+On the other hand, the machine can choose to schedule this work whenever it
 pleases. As a consequence, semigroups can hook into many pieces of machinery in
-other libraries and frameworks, for example we can use the associativity to imbue parallelism into our work for free!
+other libraries and frameworks, for example, we can use the associativity to imbue parallelism into our work for free!
 
 <MultiCodeBlock>
 
@@ -148,7 +148,7 @@ Associativity is a very common property, so whenever you find yourself with a bi
 
 ## Monoids
 
-A monoid extends semigroups with an identity, $\epsilon$. So a monoid is a type, a closed binary associative operation and an identity: $(T, \oplus, \epsilon)$. Many of the examples above for semigroups are also monoids: Addition of integers uses $0$ as an identity. Multiplication of integers' identity is $1$. We can construct and identity cache to make cache composition a monoid.
+A monoid extends semigroups with an identity, $\epsilon$. So a monoid is a type, a closed binary associative operation, and an identity: $(T, \oplus, \epsilon)$. Many of the examples above for semigroups are also monoids: Addition of integers uses $0$ as an identity. Multiplication of integers' identity is $1$. We can construct and identity cache to make cache composition a monoid.
 
 To be a valid identity, the following law must hold: $\forall x. x \oplus \epsilon = \epsilon \oplus x = x$, in other words, combining with the identity on the left or the right is the same as doing nothing at all. There is no $\epsilon$ which obeys that law that makes $(NonEmptyList, ++, \epsilon)$ a monoid. However, $(List, ++, [])$ is a monoid because concatenating the empty list on the left and right over any other list is the same as not concatenating at all.
 
@@ -240,9 +240,12 @@ func expressiveNoNeedMaybe<M: Monoid>() -> M {
 
 Monoids are the building blocks of composition. And composition leads to clean, simple, and expressive code. Moreover, when you and your colleagues can speak about these abstract notions concretely you get a huge productivity boost!
 
+Thank you [Tiziano Coroneo](https://twitter.com/TizianoCoroneo) for pointing out some typos in an early version of this post!
+
 [^1]: You can also choose to consume this blog post [in video form](https://www.youtube.com/watch?v=6z9QjDUKkCs) with Swift as the programming language substrate.
-[^2]: Okay, for full-disclosure, I have to admit that intellectual self-indulgence also drives me to dig deep into this sort of thing. But trust me, semigroups and monoids are extremely useful!
+[^2]: Okay, for full disclosure, I have to admit that intellectual self-indulgence also drives me to dig deep into this sort of thing. But trust me, semigroups and monoids are extremely useful!
 [^3]: The upside-down `A`, $\forall$, reads as "for all" -- this whole statement also reads as: For all choices of $x$ and $y$, combining $x$ and $y$ is the same as combining $y$ and $x$ &mdash; a formally precise way of saying "the order that we combine doesn't matter".
 [^4]: Matrix multiplication $M_1 * M_2$ means something different than $M_2 * M_1$ &mdash; see [wikipedia](https://en.wikipedia.org/wiki/Matrix_multiplication) for more.
 [^5]: Closed in this context means that the operation always returns an element of this same type, $\forall x: T, y: T. (x + y): T$, the operation never diverges with an infinite loop or throws an exception.
 [^6]: A binary operation is one which acts on two elements: $f(x,y)$ or $x \oplus y$.
+
