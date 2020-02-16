@@ -143,7 +143,12 @@ module Sup = {
     let className =
       merge([
         bodyStyle,
-        style([color(Style.Colors.green), hover([textDecoration(`none)])]),
+        style([
+          color(Style.Colors.green),
+          display(`inlineBlock),
+          marginTop(`em(-1.)), // make line height not go crazy here
+          hover([textDecoration(`none)]),
+        ]),
       ]);
     let element = <sup className />;
   });

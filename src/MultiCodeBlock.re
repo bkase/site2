@@ -3,7 +3,13 @@ let reason = code => {
   Refmt.(printML(ast), printRE(ast));
 };
 let ocaml = code => {
-  let ast = Refmt.parseML(code) |> Result.get_ok;
+  let ast =
+    switch (Refmt.parseML(code)) {
+    | Error(`RefmtParseError(e)) =>
+      Js.log3("Failed to parse", code, e);
+      Js.Exn.raiseError("Failed to parse ML code");
+    | Ok(ast) => ast
+    };
   (code, Refmt.printRE(ast));
 };
 
