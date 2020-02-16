@@ -72,6 +72,7 @@ let unpage = x =>
   | `Blog => "BLOG"
   | `Videos => "VIDEOS"
   | `Code => "CODE"
+  | `BlogPost => Js.Exn.raiseError("There is no name for blog posts")
   };
 
 let pages = [`Home, `Blog, `Videos, `Code];
@@ -80,6 +81,7 @@ let href = page => {
   switch (page) {
   | `Home => Links.home
   | `Blog => Links.blog
+  | `BlogPost => Js.Exn.raiseError("There is no href for blog posts")
   | `Videos => Links.video
   | `Code => Links.code
   };
@@ -96,11 +98,12 @@ let make = (~topLink) => {
              let unpagedLink = unpage(link);
              let topResolve = Option.value(topLink, ~default=`Home);
 
-             let extraStyles = if (i mod 2 == 0) {
-                          [Style.growOnSwitch];
-                        } else {
-                          [];
-                        };
+             let extraStyles =
+               if (i mod 2 == 0) {
+                 [Style.growOnSwitch];
+               } else {
+                 [];
+               };
 
              if (link == topResolve) {
                <li
@@ -116,12 +119,7 @@ let make = (~topLink) => {
              } else {
                <li
                  key=unpagedLink
-                 className=Css.(
-                   merge([
-                     Style.otherLink,
-                     ...extraStyles,
-                   ])
-                 )>
+                 className=Css.(merge([Style.otherLink, ...extraStyles]))>
                  <a className=Style.navLink href={href(link)}>
                    {ReasonReact.string(unpagedLink)}
                  </a>

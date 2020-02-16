@@ -88,7 +88,7 @@ let make = (~meta: Metadata.t, ~children) => {
     description={metadata.description}
     extraHead=BlogComponents.Katex.head>
     <div className=Style.page>
-      <Nav topLink={Some(`Blog)} />
+      <Nav topLink={Some(`BlogPost)} />
       <div className=Style.content>
         <Next.MDXProvider
           components={
