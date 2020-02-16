@@ -5,6 +5,7 @@
        url("/static/fonts/arame/ArameRegular.ttf") format("truetype");
   font-weight: "normal";
   font-style: "normal";
+  font-display: block;
 }
 
 @font-face {
@@ -14,5 +15,6 @@
        url("/static/fonts/essential-pragmatapro/EssentialPro.woff") format("woff");
   font-weight: "normal";
   font-style: "normal";
+  font-display: swap;
 }
 

@@ -48,6 +48,7 @@ module Style = {
           display(`block),
           marginLeft(`rem(4.875)),
           paddingTop(`rem(2.3125)),
+          maxWidth(`px(167)),
         ],
       ),
     ]);
