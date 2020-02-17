@@ -26,7 +26,7 @@ Algebraic structures in typed programming languages are defined by signatures/pr
 
 A semigroup is a type coupled with a closed[^5] binary[^5] associative operation that acts on that type, $(T, \oplus)$. Addition over integers, $(Int, +)$, multiplication over integers, $(Int, \times)$, and concat over non-empty lists, $(NonEmptyList, ++)$ are all semigroups. Likewise for [cache composition](https://www.youtube.com/watch?v=8uqXuEZLyUU) and [sequencing animations](https://www.youtube.com/watch?v=xAFawAKjLfA).
 
-The associativity law demands $\forall x, y, z. (x \oplus y) \oplus z = x \oplus (y \oplus z)$. This is the case for all the examples shown above. A counter-example for illustration purposes: Subtraction over integers, $(Int, -)$. Proof: Take $x=1,y=2,z=3$, $(1 - 2) - 3$ evaluates to $-4$, but $1 - (2-3)$ evaluates to $+1$!
+The associativity law demands $\forall x, y, z. (x \oplus y) \oplus z = x \oplus (y \oplus z)$. This is the case for all the examples shown above. A counter-example for illustration purposes: Subtraction over integers, $(Int, -)$. Proof: Take $x=1,y=2,z=3$, $(1 - 2) - 3$ evaluates to $-4$, but $1 - (2-3)$ evaluates to $+2$!
 
 Since it's hard to type $\oplus$ in our programming development environments, we typically use `<>` (or even `+`) to denote this operation.
 
@@ -49,7 +49,7 @@ class Semigroup a where
 
 ```swift
 protocol Semigroup {
-  func <>(a: Self, b: Self) -> Self
+  static func <>(a: Self, b: Self) -> Self
 }
 ```
 
@@ -240,7 +240,7 @@ func expressiveNoNeedMaybe<M: Monoid>() -> M {
 
 Monoids are the building blocks of composition. And composition leads to clean, simple, and expressive code. Moreover, when you and your colleagues can speak about these abstract notions concretely you get a huge productivity boost!
 
-Thank you [Tiziano Coroneo](https://twitter.com/TizianoCoroneo) for pointing out some typos in an early version of this post!
+Thank you [Tiziano Coroneo](https://twitter.com/TizianoCoroneo), [@_lksz_](https://twitter.com/_lksz_), and [Kaan Dedeoglu](https://twitter.com/kaandedeoglu) for pointing out some mistakes in early versions of this post!
 
 [^1]: You can also choose to consume this blog post [in video form](https://www.youtube.com/watch?v=6z9QjDUKkCs) with Swift as the programming language substrate.
 [^2]: Okay, for full disclosure, I have to admit that intellectual self-indulgence also drives me to dig deep into this sort of thing. But trust me, semigroups and monoids are extremely useful!
