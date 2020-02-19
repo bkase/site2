@@ -21,7 +21,10 @@ module Language = {
     | "language-haskell" => `Haskell
     | "language-swift" => `Swift
     | "language-nix" => `Nix
-    | _ => failwith("Unhandled language in MultiCodeBlock")
+    | "language-typescript" => `Typescript
+    | "language-rust" => `Rust
+    | "language-kotlin" => `Kotlin
+    | x => failwith("Unhandled language in MultiCodeBlock: " ++ x)
     };
   };
 
@@ -32,6 +35,9 @@ module Language = {
     | `Haskell => "Haskell"
     | `Swift => "Swift"
     | `Nix => "Nix"
+    | `Kotlin => "Kotlin"
+    | `Typescript => "TypeScript"
+    | `Rust => "Rust"
     };
   };
 };
@@ -152,11 +158,29 @@ module TabSelect = {
     open Css;
     open Style;
 
+    let () = global(".tab-box::-webkit-scrollbar", [display(`none)]);
+
     let tabs =
       style([
-        marginBottom(`px(-13)),
-        marginLeft(`px(-8)),
+        unsafe("width", "intrinsic"),
+        unsafe("width", "max-content"),
         media(MediaQuery.halfTablet, [marginLeft(`px(-16))]),
+      ]);
+
+    let tabsBox =
+      style([
+        marginLeft(`rem(-1.)),
+        paddingLeft(`rem(0.5)),
+        paddingBottom(`px(10)),
+        paddingTop(`px(10)),
+        marginBottom(`px(-10)),
+        marginTop(`px(-10)),
+        overflowX(`auto),
+        unsafe("scrollbar-width", "none"),
+        media(
+          MediaQuery.tablet,
+          [marginLeft(`rem(-1.5)), paddingLeft(`rem(1.5))],
+        ),
       ]);
   };
 
@@ -168,18 +192,20 @@ module TabSelect = {
       onSelected(i);
     };
 
-    <div className={Css.merge([Style.tabs, "tab-select"])}>
-      {names
-       |> Array.mapi((i, name) => {
-            <Item name checked={i == selected} onClick={onClick(i)} />
-          })
-       |> React.array}
+    <div className={Css.merge([Style.tabsBox, "tab-box"])}>
+      <div className={Css.merge([Style.tabs, "tab-select"])}>
+        {names
+         |> Array.mapi((i, name) => {
+              <Item name checked={i == selected} onClick={onClick(i)} />
+            })
+         |> React.array}
+      </div>
     </div>;
   };
 };
 
 let () =
-  Css.(global(".tab-select ~ pre > code", [borderTopLeftRadius(`zero)]));
+  Css.(global(".tab-box ~ div > pre > code", [borderTopLeftRadius(`zero)]));
 
 [@react.component]
 let make = (~children) => {
@@ -189,8 +215,10 @@ let make = (~children) => {
 
   let names = codes |> Array.map(((lang, _)) => Language.print(lang));
 
-  <div>
+  <div className=Css.(style([display(`flex), flexDirection(`column)]))>
     <TabSelect names onSelected={i => setSelected(_ => i)} />
-    {codes[selected] |> snd}
+    <div className=Css.(style([marginTop(`px(-13))]))>
+      {codes[selected] |> snd}
+    </div>
   </div>;
 };

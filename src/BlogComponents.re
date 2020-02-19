@@ -72,31 +72,44 @@ module H1 = {
   };
 };
 
+let headingStyle =
+  style([
+    display(`flex),
+    alignItems(`baseline),
+    Typeface.pragmata,
+    fontWeight(`normal),
+    marginBottom(`rem(1.0)),
+    paddingTop(`rem(0.5)),
+    paddingBottom(`rem(0.5)),
+  ]);
+
 module H2 =
   Wrap({
     let className =
-      style([
-        display(`flex),
-        alignItems(`baseline),
-        Typeface.pragmata,
-        fontSize(`px(29)),
-        fontWeight(`normal),
-        marginBottom(`rem(1.0)),
-        paddingTop(`rem(0.5)),
-        paddingBottom(`rem(0.5)),
-        media(MediaQuery.tablet, [fontSize(`px(38))]),
+      merge([
+        headingStyle,
+        style([
+          fontSize(`px(29)),
+          media(MediaQuery.tablet, [fontSize(`px(38))]),
+        ]),
       ]);
     let element = <h2 className />;
   });
 
-let bodyStyle =
-  merge([
-    P.withBottom,
-    style([
-      fontSize(Sizes.Mobile.body),
-      media(MediaQuery.tablet, [fontSize(Sizes.body)]),
-    ]),
+let copySized =
+  style([
+    fontSize(Sizes.Mobile.body),
+    media(MediaQuery.tablet, [fontSize(Sizes.body)]),
   ]);
+
+module H3 =
+  Wrap({
+    let className =
+      merge([headingStyle, copySized, style([fontWeight(`bold)])]);
+    let element = <h3 className />;
+  });
+
+let bodyStyle = merge([P.withBottom, copySized]);
 
 let changedSize = size =>
   style(
@@ -147,6 +160,7 @@ module Sup = {
           color(Style.Colors.green),
           display(`inlineBlock),
           marginTop(`em(-1.)), // make line height not go crazy here
+          marginBottom(`em(0.)), // make line height not go crazy here
           hover([textDecoration(`none)]),
         ]),
       ]);

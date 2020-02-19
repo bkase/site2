@@ -94,6 +94,7 @@ let make = (~meta: Metadata.t, ~children) => {
           components={
             "h1": BlogComponents.H1.make,
             "h2": BlogComponents.H2.make,
+            "h3": BlogComponents.H3.make,
             "p": BlogComponents.P.make,
             "a": BlogComponents.A.make,
             "code": BlogComponents.Code.make,
