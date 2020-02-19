@@ -84,7 +84,7 @@ newtype Endo a = Endo (a -> a)
 ```
 
 ```swift
-struct Endo<A> { let f: @escaping (A) -> A }
+struct Endo<A> { let run: @escaping (A) -> A }
 ```
 
 </MultiCodeBlock>
@@ -385,7 +385,7 @@ func liftPointwise<X, A>(
 
 </MultiCodeBlock>
 
-An interesting property of pointwise operations is that if the underlying operation is a monoid[^5] than the resulting pointwise operation is a monoid too! I think a nice proof of this is to show the source code that performs this operation for us.
+An interesting property of pointwise operations is that if the underlying operation is a monoid[^5] then the resulting pointwise operation is a monoid too! I think a nice proof of this is to show the source code that performs this operation for us.
 
 <MultiCodeBlock>
 
@@ -542,6 +542,8 @@ And we have a monoid! You could say a reducer is just the $Endo_{state}$ monoid 
 ## Conclusion
 
 Endofunctions are monoids, pointwise monoidal operations are monoids, and combining these two function-monoids give us reducers! The monoidal formulation of reducers obsoletes a need for a library to provide us a way to combine reducers and give us motivation for why reducers are such a nice way to manage changes to a larger application state.
+
+Thank you [Thomas Visser](https://twitter.com/thomvis) for pointing out some mistakes in early versions of this post!
 
 ## Bonus: Stick it in a Writer Monad
 
