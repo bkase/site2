@@ -11,7 +11,7 @@ Reducers &mdash; a tool for handling state changes &mdash; help engineers manage
 
 ## Preliminaries
 
-I expect readers to be familiar with the material covered in the [first post on semigroups and monoids](/posts/semigroups-and-monoids), but for the purposes of keeping this post more or less self-contained I'll review the declaration of semigroups and monoids here:
+I expect readers to be familiar with the material covered in the [first post on semigroups and monoids](/posts/semigroups-and-monoids), but to keep this post more or less self-contained I'll review the declaration of semigroups and monoids here:
 
 <MultiCodeBlock>
 
@@ -162,7 +162,7 @@ agedFred =
 
 ```swift
 // it looks like we're mutating here, but due to value semantics of
-// structs in swift is this fine
+// structs in Swift, this is fine
 let oneYearOlder: Endo<Person> =
   Endo { p in p.age = p.age+1; return p }
 
@@ -182,7 +182,7 @@ Notice a few interesting facts here:
 
 ### The Semigroup
 
-The semigroup instance on endofunctions gives us a way to combine two changes into a single change. Concretely, we may want to also change our name field to add a last name, for example we want to `addLastNameSmith`:
+The semigroup instance on endofunctions gives us a way to combine two changes into a single change. Concretely, we may want to also change our name field to add a last name, for example, we want to `addLastNameSmith`:
 
 <MultiCodeBlock>
 
@@ -228,8 +228,6 @@ agedFred =
 ```
 
 ```swift
-// it looks like we're mutating here, but due to value semantics of
-// structs in swift is this fine
 let oneYearOlder: Endo<Person> =
   Endo { p in p.age = p.age+1; return p }
 
@@ -301,11 +299,11 @@ change =
 
 </MultiCodeBlock>
 
-We can further improve on the above by utilising a [writer monad as described in an older post](/posts/ocaml-writer) to remove all of the boilerplate doing something like the above.
+We can further improve on the above by utilizing a [writer monad as described in an older post](/posts/ocaml-writer) to remove all of the boilerplate doing something like the above.
 
 ### The Instance
 
-An astute reader may notice "combining changes" is function composition, or $\circ$, and the trivial change is the identity function or $id$. Thus the monoid we've really been talking about this whole time is $(Endo_A, \circ, id_A)$[^4].
+An astute reader may notice "combining changes" is function composition or $\circ$, and the trivial change is the identity function or $id$. Thus the monoid we've been talking about this whole time is $(Endo_A, \circ, id_A)$[^4].
 
 <MultiCodeBlock>
 
@@ -387,7 +385,7 @@ func liftPointwise<X, A>(
 
 </MultiCodeBlock>
 
-An interesting property of pointwise operations is that if the underlying operation is a monoid[^5] than the resulting pointwise operation is a monoid too! I think a nice proof of this is to show the source code that that performs this operation for us.
+An interesting property of pointwise operations is that if the underlying operation is a monoid[^5] than the resulting pointwise operation is a monoid too! I think a nice proof of this is to show the source code that performs this operation for us.
 
 <MultiCodeBlock>
 
@@ -443,7 +441,7 @@ extension Func: Monoid where A: Monoid {
 
 </MultiCodeBlock>
 
-Sometimes you want to manipulate functions over the operations rather than the underlying operations themselves. The nice thing is we don't have to give up our monoidal super powers when we do so!
+Sometimes you want to manipulate functions over the operations rather than the underlying operations themselves. The nice thing is we don't have to give up our monoidal superpowers when we do so!
 
 ## Reducers
 
@@ -539,18 +537,18 @@ func reducer<S,A>() -> Func<A, Endo<S>>
 
 </MultiCodeBlock>
 
-And we have a monoid! You could say a reducer is just the $Endo_{state}$ monoid lifted pointwise over actions. The monoid is precisely why using reducers is a nice way to decompose and reason about state changes in your application: Breaking down problems into pieces makes them more managable, and the identity and associativity of the monoid means gluing them back together is easy. In fact, with our monoid instance on the manipulated reducer the $\epsilon$ and $\oplus$ give us a Redux-like library for free.
+And we have a monoid! You could say a reducer is just the $Endo_{state}$ monoid lifted pointwise over actions. The monoid is precisely why using reducers is a nice way to decompose and reason about state changes in your application: Breaking down problems into pieces makes them more manageable, and the identity and associativity of the monoid means gluing them back together is easy. In fact, with our monoid instance on the manipulated reducer the $\epsilon$ and $\oplus$ give us a Redux-like library for free.
 
 ## Conclusion
 
-Endofunctions are monoids, pointwise monoidal operations are monoids, and combining these two function-monoids give us reducers! The monoidal formulation of reducers obsoletes a need for a library to provide us a way to combine reducers and give us motivation for why reducers are such a nice way to manage changes to larger application state.
+Endofunctions are monoids, pointwise monoidal operations are monoids, and combining these two function-monoids give us reducers! The monoidal formulation of reducers obsoletes a need for a library to provide us a way to combine reducers and give us motivation for why reducers are such a nice way to manage changes to a larger application state.
 
 ## Bonus: Stick it in a Writer Monad
 
-Reducers show up in two separate places in the comonadic UI framework implementation that I used in [barbq](/posts/introducing-barbq). In comonadic UI components, one of the kinds of reducers is located inside a [writer monad](/posts/ocaml-writer). Most of the time a component won't need to react to any actions, and if this is the case, components are unencumbered by boilerplate specifying a "dummy" reducer. The writer monad just takes `empty` for us. When we really need to react to actions here, we can `tell` our component how to react to each one. We're able to get this nice API for free precisely because reducers are monoids.
+Reducers show up in two separate places in the comonadic UI framework implementation that I used in [barbq](/posts/introducing-barbq). In comonadic UI components, one of the kinds of reducers is located inside a [writer monad](/posts/ocaml-writer). Most of the time a component won't need to react to any actions, and if this is the case, components are unencumbered by boilerplate specifying a "dummy" reducer. The writer monad just takes `empty` for us. When we need to react to actions here, we can `tell` our component how to react to each one. We're able to get this nice API for free precisely because reducers are monoids.
 
 [^1]: *Endo* means precisely that the domain and range (of a function) are the same.
-[^2]: To reify is to make the abstract concrete, in this case it's referring to making a "change" a value we can manipulate instead of just an operation we perform in our programs.
-[^3]: A change that doesn't actually change anything
+[^2]: To reify is to make the abstract concrete, in this case, it's referring to making a "change" a value we can manipulate instead of just an operation we perform in our programs.
+[^3]: A change that doesn't change anything
 [^4]: The subscript $_A$ here is noting that there is a monoid instance for all choices of $A$.
 [^5]: Moreover, operations lifted pointwise over any algebraic structure are also members of the same algebraic structure (so this is also true for semigroups, and other structures like rings, and semilattices too).
