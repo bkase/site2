@@ -84,7 +84,7 @@ newtype Endo a = Endo (a -> a)
 ```
 
 ```swift
-struct Endo<A> { let run: @escaping (A) -> A }
+struct Endo<A> { let run: (A) -> A }
 ```
 
 </MultiCodeBlock>
@@ -543,7 +543,7 @@ And we have a monoid! You could say a reducer is just the $Endo_{state}$ monoid 
 
 Endofunctions are monoids, pointwise monoidal operations are monoids, and combining these two function-monoids give us reducers! The monoidal formulation of reducers obsoletes a need for a library to provide us a way to combine reducers and give us motivation for why reducers are such a nice way to manage changes to a larger application state.
 
-Thank you [Thomas Visser](https://twitter.com/thomvis) for pointing out some mistakes in early versions of this post!
+Thank you [Thomas Visser](https://twitter.com/thomvis) and [Stephen Celis](https://twitter.com/stephencelis) for pointing out some mistakes in early versions of this post!
 
 ## Bonus: Stick it in a Writer Monad
 
