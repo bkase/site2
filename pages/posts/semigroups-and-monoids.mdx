@@ -148,7 +148,7 @@ Associativity is a very common property, so whenever you find yourself with a bi
 
 ## Monoids
 
-A monoid extends semigroups with an identity, $\epsilon$. So a monoid is a type, a closed binary associative operation, and an identity: $(T, \oplus, \epsilon)$. Many of the examples above for semigroups are also monoids: Addition of integers uses $0$ as an identity. Multiplication of integers' identity is $1$. We can construct and identity cache to make cache composition a monoid.
+A monoid extends semigroups with an identity, $\epsilon$. So a monoid is a type, a closed binary associative operation, and an identity: $(T, \oplus, \epsilon)$. Many of the examples above for semigroups are also monoids: Addition of integers uses $0$ as an identity. Multiplication of integers' identity is $1$. We can construct an identity cache to make cache composition a monoid.
 
 To be a valid identity, the following law must hold: $\forall x. x \oplus \epsilon = \epsilon \oplus x = x$, in other words, combining with the identity on the left or the right is the same as doing nothing at all. There is no $\epsilon$ which obeys that law that makes $(NonEmptyList, ++, \epsilon)$ a monoid. However, $(List, ++, [])$ is a monoid because concatenating the empty list on the left and right over any other list is the same as not concatenating at all.
 
@@ -240,7 +240,7 @@ func expressiveNoNeedMaybe<M: Monoid>() -> M {
 
 Monoids are the building blocks of composition. And composition leads to clean, simple, and expressive code. Moreover, when you and your colleagues can speak about these abstract notions concretely you get a huge productivity boost!
 
-Thank you [Tiziano Coroneo](https://twitter.com/TizianoCoroneo), [@_lksz_](https://twitter.com/_lksz_), and [Kaan Dedeoglu](https://twitter.com/kaandedeoglu) for pointing out some mistakes in early versions of this post!
+Thank you [Tiziano Coroneo](https://twitter.com/TizianoCoroneo), [@\_lksz\_](https://twitter.com/_lksz_), [Kaan Dedeoglu](https://twitter.com/kaandedeoglu), and [Avery Morin](https://twitter.com/_schmavery) for pointing out some mistakes in early versions of this post!
 
 [^1]: You can also choose to consume this blog post [in video form](https://www.youtube.com/watch?v=6z9QjDUKkCs) with Swift as the programming language substrate.
 [^2]: Okay, for full disclosure, I have to admit that intellectual self-indulgence also drives me to dig deep into this sort of thing. But trust me, semigroups and monoids are extremely useful!
