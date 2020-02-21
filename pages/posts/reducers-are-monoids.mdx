@@ -57,6 +57,15 @@ protocol Monoid : Semigroup {
 }
 ```
 
+```F#
+type Semigroup<'a> =
+    abstract member concat: 'a -> 'a -> 'a
+
+type Monoid<'a> =
+    inherit Semigroup<'a>
+    abstract member empty: 'a
+```
+
 </MultiCodeBlock>
 
 ## Endofunctions are monoids
@@ -85,6 +94,10 @@ newtype Endo a = Endo (a -> a)
 
 ```swift
 struct Endo<A> { let run: (A) -> A }
+```
+
+```F#
+type Endo<'a> = 'a -> 'a
 ```
 
 </MultiCodeBlock>
@@ -120,6 +133,13 @@ data Person = Person
 struct Person {
   var name: String
   var age: Int
+}
+```
+
+```F#
+type Person = {
+    name : string
+    age : int
 }
 ```
 
@@ -171,6 +191,15 @@ let agedFred = { () in
   let fred_ = oneYearOlder.run(fred)
   return fred_ /* Person(name: "Fred", age: 21) */
 }
+```
+
+```F#
+let oneYearOlder: Endo<Person> = fun p -> { p with age = p.age + 1 }
+
+let agedFred =
+    let fred = { name = "Fred"; age = 20 }
+    let fred_ = oneYearOlder fred
+    fred_
 ```
 
 </MultiCodeBlock>
@@ -242,6 +271,17 @@ let agedFred = { () in
 }
 ```
 
+```F#
+let oneYearOlder: Endo<Person> = fun p -> { p with age = p.age + 1 }
+let addLastNameSmith: Endo<Person> = fun p -> { p with name = p.name + " Smith" }
+
+let agedFred =
+    let fred = { name = "Fred"; age = 20 }
+    let change = PersonEndo.concat oneYearOlder addLastNameSmith
+    let fred_ = change fred
+    fred_
+```
+
 </MultiCodeBlock>
 
 ### The Monoid
@@ -297,6 +337,13 @@ change =
 // etc
 ```
 
+```F#
+let change = PersonEndo.empty
+(* ... *)
+let change2 = PersonEndo.concat change (if aYearPasses then oneYearOlder else PersonEndo.empty)
+(* etc *)
+```
+
 </MultiCodeBlock>
 
 We can further improve on the above by utilizing a [writer monad as described in an older post](/posts/ocaml-writer) to remove all of the boilerplate doing something like the above.
@@ -341,6 +388,17 @@ extension Endo : Semigroup {
 extension Endo : Monoid {
   static var empty { return Endo { x in x } }
 }
+```
+
+```F#
+type EndoMonoid<'a> () =
+    interface Monoid<Endo<'a>> with
+        member this.empty = fun x -> x
+
+    interface Semigroup<Endo<'a>> with
+        member this.concat f g = fun x -> g (f x)
+
+let PersonEndo = (new EndoMonoid<Person> ()) :> Monoid<Endo<Person>>
 ```
 
 </MultiCodeBlock>
