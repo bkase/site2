@@ -35,11 +35,64 @@ let make =
         href="/static/icon/favicon-180.png"
         sizes="180x180"
       />
-      <link href="/static/reset.css" rel="stylesheet" />
       <meta property="og:title" content=title />
       <meta property="og:description" content=description />
-      <meta property="og:type" content="website"/>
-      <link href="/static/fonts.css" rel="stylesheet" />
+      <meta property="og:type" content="website" />
+      <style
+        dangerouslySetInnerHTML={
+          "__html": {j|
+/* Remove default padding */
+ul,
+ol {
+  padding: 0;
+}
+
+/* Remove default margin */
+body,
+h1,
+h2,
+h3,
+h4,
+p,
+ul,
+ol,
+li,
+figure,
+figcaption,
+blockquote,
+dl,
+dd {
+  margin: 0;
+}
+
+/* Set core body defaults */
+body {
+  min-height: 100vh;
+  scroll-behavior: smooth;
+}
+
+@font-face {
+  font-family: "Arame";
+  src: url("/static/fonts/arame/arameregular.woff2") format("woff2"),
+       url("/static/fonts/arame/arameregular.woff") format("woff"),
+       url("/static/fonts/arame/arameregular.ttf") format("truetype");
+  font-weight: "normal";
+  font-style: "normal";
+  font-display: block;
+}
+
+@font-face {
+  font-family: "PragmataPro";
+  src: local("PragmataPro"),
+       url("/static/fonts/essential-pragmatapro/essentialpro.woff2") format("woff2"),
+       url("/static/fonts/essential-pragmatapro/essentialpro.woff") format("woff");
+  font-weight: "normal";
+  font-style: "normal";
+  font-display: swap;
+}
+|j},
+        }
+      />
       extraHead
     </Next.Head>
     <div> children </div>
