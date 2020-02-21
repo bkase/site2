@@ -68,21 +68,10 @@ module H1 = BlogComponents.H1.R;
 module Item = {
   [@react.component]
   let make = (~link, ~date, ~title) => {
-    let prettyDate = {
-      let pad = s =>
-        if (String.length(s) > 1) {
-          s;
-        } else {
-          "0" ++ s;
-        };
-      let str = Js.Date.toLocaleString(date);
-      let dateStr = Js.String.split(",", str)[0];
-      switch (Js.String.split("/", dateStr)) {
-      | [|month, day, year|] =>
-        pad(month) ++ "/" ++ pad(day) ++ "/" ++ pad(year)
-      | _ => failwith("Unexpected date")
-      };
-    };
+    let _date = date;
+    let prettyDate: string = [%raw
+      "Props.date.toLocaleDateString(undefined, { month: \"2-digit\", day: \"2-digit\", year: \"2-digit\" })"
+    ];
 
     <a href=link className=Style.itemLink>
       <p className=Style.date> {React.string(prettyDate)} </p>
