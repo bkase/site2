@@ -393,10 +393,10 @@ extension Endo : Monoid {
 ```F#
 type EndoMonoid<'a> () =
     interface Monoid<Endo<'a>> with
-        member this.empty = fun x -> x
+        member _.empty = fun x -> x
 
     interface Semigroup<Endo<'a>> with
-        member this.concat f g = fun x -> g (f x)
+        member _.concat f g = fun x -> g (f x)
 
 let PersonEndo = (new EndoMonoid<Person> ()) :> Monoid<Endo<Person>>
 ```
@@ -439,6 +439,14 @@ func liftPointwise<X, A>(
 ) -> (@escaping (X) -> A, @escaping (X) -> A) -> (X) -> A {
     return { f1, f2 in { x in op(f1(x), f2(x)) } }
 }
+```
+
+```F#
+(* val liftPointwise :
+    op: ('a -> 'b -> 'c) -> f1:('d -> 'a) -> f2:('d -> 'b) -> x:'d -> 'c *)
+let liftPointwise op = fun f1 f2 -> fun x -> op (f1 x) (f2 x)
+// or
+let liftPointwise op f1 f2 x = op (f1 x) (f2 x)
 ```
 
 </MultiCodeBlock>
@@ -497,6 +505,15 @@ extension Func: Monoid where A: Monoid {
 }
 ```
 
+```F#
+type LiftPointWise<'x, 'a> (m: Monoid<'a>) =
+    interface Monoid<'x -> 'a> with
+        member _.empty = fun _ -> m.empty
+
+    interface Semigroup<'x -> 'a> with
+        member _.concat f1 f2 = fun x -> m.concat (f1 x) (f2 x)
+```
+
 </MultiCodeBlock>
 
 Sometimes you want to manipulate functions over the operations rather than the underlying operations themselves. The nice thing is we don't have to give up our monoidal superpowers when we do so!
@@ -525,6 +542,10 @@ reducer :: (state, action) -> state
 
 ```swift
 func reducer<S,A>(state: S, action: A) -> S
+```
+
+```F#
+type reducer<'state, 'action> = 'state * 'action -> 'state
 ```
 
 </MultiCodeBlock>
@@ -591,6 +612,18 @@ func reducer<S,A>() -> Func<A, Endo<S>>
 // reducer is a monoid because Endo<S> is a
 // monoid, and it's a pointwise function into
 // a monoid.
+```
+
+```F#
+type reducer<'state, 'action> = 'state * 'action -> 'state
+// flip the tuple
+type reducer<'state, 'action> = 'action * 'state -> 'state
+// curry the function
+type reducer<'state, 'action> = 'action -> 'state -> 'state
+// rewrite (state -> state) to (Endo state)
+type reducer<'state, 'action> = 'action -> Endo<'state>
+// reducer is a monoid because (Endo state) is a monoid,
+// and it's a pointwise function into a monoid
 ```
 
 </MultiCodeBlock>
