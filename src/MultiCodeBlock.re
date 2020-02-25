@@ -24,6 +24,7 @@ module Language = {
     | "language-typescript" => `Typescript
     | "language-rust" => `Rust
     | "language-kotlin" => `Kotlin
+    | "language-fsharp" => `Fsharp
     | x => failwith("Unhandled language in MultiCodeBlock: " ++ x)
     };
   };
@@ -38,6 +39,7 @@ module Language = {
     | `Kotlin => "Kotlin"
     | `Typescript => "TypeScript"
     | `Rust => "Rust"
+    | `Fsharp => "F#"
     };
   };
 };
