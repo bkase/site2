@@ -57,6 +57,15 @@ protocol Monoid : Semigroup {
 }
 ```
 
+```fsharp
+type Semigroup<'a> =
+    abstract member concat: 'a -> 'a -> 'a
+
+type Monoid<'a> =
+    inherit Semigroup<'a>
+    abstract member empty: 'a
+```
+
 </MultiCodeBlock>
 
 ## Endofunctions are monoids
@@ -85,6 +94,10 @@ newtype Endo a = Endo (a -> a)
 
 ```swift
 struct Endo<A> { let run: (A) -> A }
+```
+
+```fsharp
+type Endo<'a> = 'a -> 'a
 ```
 
 </MultiCodeBlock>
@@ -120,6 +133,13 @@ data Person = Person
 struct Person {
   var name: String
   var age: Int
+}
+```
+
+```fsharp
+type Person = {
+    name : string
+    age : int
 }
 ```
 
@@ -171,6 +191,15 @@ let agedFred = { () in
   let fred_ = oneYearOlder.run(fred)
   return fred_ /* Person(name: "Fred", age: 21) */
 }
+```
+
+```fsharp
+let oneYearOlder: Endo<Person> = fun p -> { p with age = p.age + 1 }
+
+let agedFred =
+    let fred = { name = "Fred"; age = 20 }
+    let fred_ = oneYearOlder fred
+    fred_
 ```
 
 </MultiCodeBlock>
@@ -242,6 +271,17 @@ let agedFred = { () in
 }
 ```
 
+```fsharp
+let oneYearOlder: Endo<Person> = fun p -> { p with age = p.age + 1 }
+let addLastNameSmith: Endo<Person> = fun p -> { p with name = p.name + " Smith" }
+
+let agedFred =
+    let fred = { name = "Fred"; age = 20 }
+    let change = PersonEndo.concat oneYearOlder addLastNameSmith
+    let fred_ = change fred
+    fred_
+```
+
 </MultiCodeBlock>
 
 ### The Monoid
@@ -297,6 +337,13 @@ change =
 // etc
 ```
 
+```fsharp
+let change = PersonEndo.empty
+(* ... *)
+let change2 = PersonEndo.concat change (if aYearPasses then oneYearOlder else PersonEndo.empty)
+(* etc *)
+```
+
 </MultiCodeBlock>
 
 We can further improve on the above by utilizing a [writer monad as described in an older post](/posts/ocaml-writer) to remove all of the boilerplate doing something like the above.
@@ -319,7 +366,7 @@ end
 
 ```typescript
 const endoMonoid: <A>() => Monoid<Endo<A>> = () => ({
-    concat: (f, g) => x => g(f(x)),
+    concat: (f, g) => x => f(g(x)),
     empty: x => x
 });
 ```
@@ -341,6 +388,17 @@ extension Endo : Semigroup {
 extension Endo : Monoid {
   static var empty { return Endo { x in x } }
 }
+```
+
+```fsharp
+type EndoMonoid<'a> () =
+    interface Monoid<Endo<'a>> with
+        member _.empty = fun x -> x
+
+    interface Semigroup<Endo<'a>> with
+        member _.concat f g = fun x -> f (g x)
+
+let PersonEndo = (new EndoMonoid<Person> ()) :> Monoid<Endo<Person>>
 ```
 
 </MultiCodeBlock>
@@ -381,6 +439,14 @@ func liftPointwise<X, A>(
 ) -> (@escaping (X) -> A, @escaping (X) -> A) -> (X) -> A {
     return { f1, f2 in { x in op(f1(x), f2(x)) } }
 }
+```
+
+```fsharp
+(* val liftPointwise :
+    op: ('a -> 'b -> 'c) -> f1:('d -> 'a) -> f2:('d -> 'b) -> x:'d -> 'c *)
+let liftPointwise op = fun f1 f2 -> fun x -> op (f1 x) (f2 x)
+// or
+let liftPointwise op f1 f2 x = op (f1 x) (f2 x)
 ```
 
 </MultiCodeBlock>
@@ -439,6 +505,15 @@ extension Func: Monoid where A: Monoid {
 }
 ```
 
+```fsharp
+type LiftPointWise<'x, 'a> (m: Monoid<'a>) =
+    interface Monoid<'x -> 'a> with
+        member _.empty = fun _ -> m.empty
+
+    interface Semigroup<'x -> 'a> with
+        member _.concat f1 f2 = fun x -> m.concat (f1 x) (f2 x)
+```
+
 </MultiCodeBlock>
 
 Sometimes you want to manipulate functions over the operations rather than the underlying operations themselves. The nice thing is we don't have to give up our monoidal superpowers when we do so!
@@ -467,6 +542,10 @@ reducer :: (state, action) -> state
 
 ```swift
 func reducer<S,A>(state: S, action: A) -> S
+```
+
+```fsharp
+type reducer<'state, 'action> = 'state * 'action -> 'state
 ```
 
 </MultiCodeBlock>
@@ -535,6 +614,18 @@ func reducer<S,A>() -> Func<A, Endo<S>>
 // a monoid.
 ```
 
+```fsharp
+type reducer<'state, 'action> = 'state * 'action -> 'state
+// flip the tuple
+type reducer<'state, 'action> = 'action * 'state -> 'state
+// curry the function
+type reducer<'state, 'action> = 'action -> 'state -> 'state
+// rewrite (state -> state) to (Endo state)
+type reducer<'state, 'action> = 'action -> Endo<'state>
+// reducer is a monoid because (Endo state) is a monoid,
+// and it's a pointwise function into a monoid
+```
+
 </MultiCodeBlock>
 
 And we have a monoid! You could say a reducer is just the $Endo_{state}$ monoid lifted pointwise over actions. The monoid is precisely why using reducers is a nice way to decompose and reason about state changes in your application: Breaking down problems into pieces makes them more manageable, and the identity and associativity of the monoid means gluing them back together is easy. In fact, with our monoid instance on the manipulated reducer the $\epsilon$ and $\oplus$ give us a Redux-like library for free.
@@ -543,7 +634,7 @@ And we have a monoid! You could say a reducer is just the $Endo_{state}$ monoid 
 
 Endofunctions are monoids, pointwise monoidal operations are monoids, and combining these two function-monoids give us reducers! The monoidal formulation of reducers obsoletes a need for a library to provide us a way to combine reducers and give us motivation for why reducers are such a nice way to manage changes to a larger application state.
 
-Thank you [Thomas Visser](https://twitter.com/thomvis) and [Stephen Celis](https://twitter.com/stephencelis) for pointing out some mistakes in early versions of this post!
+Thank you [Thomas Visser](https://twitter.com/thomvis) and [Stephen Celis](https://twitter.com/stephencelis) for pointing out some mistakes in early versions of this post! Thank you [Janne Siera](https://twitter.com/SieraSolutions) for adding F# examples to the post!
 
 ## Bonus: Stick it in a Writer Monad
 
