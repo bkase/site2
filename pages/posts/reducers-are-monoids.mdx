@@ -57,7 +57,7 @@ protocol Monoid : Semigroup {
 }
 ```
 
-```F#
+```fsharp
 type Semigroup<'a> =
     abstract member concat: 'a -> 'a -> 'a
 
@@ -96,7 +96,7 @@ newtype Endo a = Endo (a -> a)
 struct Endo<A> { let run: (A) -> A }
 ```
 
-```F#
+```fsharp
 type Endo<'a> = 'a -> 'a
 ```
 
@@ -136,7 +136,7 @@ struct Person {
 }
 ```
 
-```F#
+```fsharp
 type Person = {
     name : string
     age : int
@@ -193,7 +193,7 @@ let agedFred = { () in
 }
 ```
 
-```F#
+```fsharp
 let oneYearOlder: Endo<Person> = fun p -> { p with age = p.age + 1 }
 
 let agedFred =
@@ -271,7 +271,7 @@ let agedFred = { () in
 }
 ```
 
-```F#
+```fsharp
 let oneYearOlder: Endo<Person> = fun p -> { p with age = p.age + 1 }
 let addLastNameSmith: Endo<Person> = fun p -> { p with name = p.name + " Smith" }
 
@@ -337,7 +337,7 @@ change =
 // etc
 ```
 
-```F#
+```fsharp
 let change = PersonEndo.empty
 (* ... *)
 let change2 = PersonEndo.concat change (if aYearPasses then oneYearOlder else PersonEndo.empty)
@@ -366,7 +366,7 @@ end
 
 ```typescript
 const endoMonoid: <A>() => Monoid<Endo<A>> = () => ({
-    concat: (f, g) => x => g(f(x)),
+    concat: (f, g) => x => f(g(x)),
     empty: x => x
 });
 ```
@@ -390,13 +390,13 @@ extension Endo : Monoid {
 }
 ```
 
-```F#
+```fsharp
 type EndoMonoid<'a> () =
     interface Monoid<Endo<'a>> with
         member _.empty = fun x -> x
 
     interface Semigroup<Endo<'a>> with
-        member _.concat f g = fun x -> g (f x)
+        member _.concat f g = fun x -> f (g x)
 
 let PersonEndo = (new EndoMonoid<Person> ()) :> Monoid<Endo<Person>>
 ```
@@ -441,7 +441,7 @@ func liftPointwise<X, A>(
 }
 ```
 
-```F#
+```fsharp
 (* val liftPointwise :
     op: ('a -> 'b -> 'c) -> f1:('d -> 'a) -> f2:('d -> 'b) -> x:'d -> 'c *)
 let liftPointwise op = fun f1 f2 -> fun x -> op (f1 x) (f2 x)
@@ -505,7 +505,7 @@ extension Func: Monoid where A: Monoid {
 }
 ```
 
-```F#
+```fsharp
 type LiftPointWise<'x, 'a> (m: Monoid<'a>) =
     interface Monoid<'x -> 'a> with
         member _.empty = fun _ -> m.empty
@@ -544,7 +544,7 @@ reducer :: (state, action) -> state
 func reducer<S,A>(state: S, action: A) -> S
 ```
 
-```F#
+```fsharp
 type reducer<'state, 'action> = 'state * 'action -> 'state
 ```
 
@@ -614,7 +614,7 @@ func reducer<S,A>() -> Func<A, Endo<S>>
 // a monoid.
 ```
 
-```F#
+```fsharp
 type reducer<'state, 'action> = 'state * 'action -> 'state
 // flip the tuple
 type reducer<'state, 'action> = 'action * 'state -> 'state
@@ -634,7 +634,7 @@ And we have a monoid! You could say a reducer is just the $Endo_{state}$ monoid 
 
 Endofunctions are monoids, pointwise monoidal operations are monoids, and combining these two function-monoids give us reducers! The monoidal formulation of reducers obsoletes a need for a library to provide us a way to combine reducers and give us motivation for why reducers are such a nice way to manage changes to a larger application state.
 
-Thank you [Thomas Visser](https://twitter.com/thomvis) and [Stephen Celis](https://twitter.com/stephencelis) for pointing out some mistakes in early versions of this post!
+Thank you [Thomas Visser](https://twitter.com/thomvis) and [Stephen Celis](https://twitter.com/stephencelis) for pointing out some mistakes in early versions of this post! Thank you [Janne Siera](https://twitter.com/SieraSolutions) for adding F# examples to the post!
 
 ## Bonus: Stick it in a Writer Monad
 
