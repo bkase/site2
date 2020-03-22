@@ -85,7 +85,6 @@ let make = (~gameSrc, ~children) => {
   <div className=Style.container>
     <figure className=Style.figure>
       <iframe
-        scrolling="no"
         style={
                 if (height != 0) {
                   ReactDOMRe.Style.make(
