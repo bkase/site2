@@ -167,7 +167,7 @@ end
 ```
 
 ```fsharp
-type Semigroup<'a, 'b> =
+type PartialIso<'a, 'b> =
     abstract member full: 'a -> 'b
     abstract member partial: 'b -> 'a option
 ```
@@ -261,7 +261,7 @@ dec [hl]
 
 This instruction is supposed to decrement the byte indexed by the 16-bit address inside the HL register. However, on my emulator it actually incremented!
 
-Upon opening up the CPUs implementation of `dec [hl]` in my emulator the source of the error beame clear:
+Upon opening up the CPUs implementation of `dec [hl]` in my emulator the source of the error became clear:
 
 ```diff
   Dec(RegsHl::HlInd) => {
@@ -291,6 +291,8 @@ I am immediately going to work on building out testing infrastructure for this p
 I'm thinking we could build even more complex representations of the runtime traces &mdash; and there's probably a body of research that I am unfamiliar with re: "dynamic" analysis of running programs (non-static analysis?). For example, you could potentially automate the removal of any lines of code that are "poisoned" by those instructions that load PPU state or do other sorts of noisy things.
 
 In addition, wouldn't it be great if folks could exchange code reviews on side projects? I'd be happy to try this with someone. Tweet [@bkase_](https://twitter.com/bkase_) if you're interested.
+
+Thank you [Janne Siera](https://twitter.com/SieraSolutions) and [Chris Eidhof](https://twitter.com/chriseidhof) for pointing out some mistakes in early version of this post!
 
 [^1]: Check out the [gameboy video series](https://www.youtube.com/user/brandernan/videos) I started and got burnt out on because it's takes too long to edit videos.
 [^2]: Decimal add adjust (DAA) is a weird instruction. Add and subtract instructions act on bytes which are typically represented in hexadecimal. Sometimes it's preferable to interpret each nibble (4-bits) of the byte as a separate decimal number. This is called binary-coded-decimal. What DAA does is it applies a fix to rewrite the result of a binary-coded-decimal add to be accurate again. See some [x86 docs](https://www.felixcloutier.com/x86/daa) for more
