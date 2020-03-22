@@ -59,7 +59,7 @@ let make = (~gameSrc, ~children) => {
   let (timeout, setTimeout) = React.useState(() => false);
   let iframeRef = React.useRef(Js.Nullable.null);
 
-  // delay 100ms after iframe loads before querying for height
+  // delay 500ms after iframe loads before querying for height
   React.useEffect1(
     () => {
       switch (loaded, timeout, React.Ref.current(iframeRef)) {
@@ -73,7 +73,7 @@ let make = (~gameSrc, ~children) => {
           },
         );
       | (true, false, _) =>
-        let _ = Js.Global.setTimeout(() => setTimeout(_ => true), 100);
+        let _ = Js.Global.setTimeout(() => setTimeout(_ => true), 500);
         ();
       | _ => ()
       };
