@@ -106,6 +106,7 @@ let make = (~meta: Metadata.t, ~children) => {
             "sup": BlogComponents.Sup.R.make,
             "HalfImageWrapper": HalfImageWrapper.make,
             "MultiCodeBlock": MultiCodeBlock.make,
+            "GameboyView": GameboyView.make,
           }>
           {Obj.magic(children)}
         </Next.MDXProvider>
