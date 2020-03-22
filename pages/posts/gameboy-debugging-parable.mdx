@@ -29,7 +29,7 @@ One of the more famous families of tests is [Blargg's Gameboy hardware test ROMs
 
 01-special tests a few "special case" instructions &mdash; jumps, a few special loads, and the decimal add adjust[^2] instruction. After a little bit a finagling, I could get 01-special to pass. This story is not about that finagling. This story is about getting the test to work. Just because it passes, doesn't mean it works.
 
-## The bug
+## The Bug
 
 Let me explain.
 
@@ -80,7 +80,7 @@ This diff view is a little helpful, but only slightly better than single-steppin
 
 Plus, it turns out that a lot of these programs have some noise in the logs that cause forks between even two "correct" emulators. In my emulator, I run the bootrom before the ROM code, but [binjgb](https://github.com/binji/binjgb) just starts at the top. Some of the instructions load state from the pixel processing unit which is extremely timing sensitive. This causes traces to diverge fairly quickly after programs start.
 
-## The mechanization
+## The Mechanization
 
 Well, what if we manipulate the traces a bit? Instead of just dumping the trace to stdout, we can load the traces into a data structure.
 
@@ -115,7 +115,7 @@ fn bank(input: In) -> IResult<In, Option<u8>> {
 
 With this, it wasn't too hard to finish up a Rust utility that can parse the trace output via stdin (at ~50MB/s no less). This means we can keep up with traces as they're being generated in realtime by the emulators.
 
-## Aside: The fun part
+## Aside: The Fun Part
 
 Parsing and pretty-printing are duals. Together they form a partial-isomorphism[^7]. We can take advantage of this to generate useful tests for the parsing and printing logic.
 
@@ -229,7 +229,7 @@ fn parse_print_roundtrip() {
 
 This test suffices for $\forall b: B$ case $p(b)$ of $Right() \rightarrow true$ and $Left(a) \rightarrow f(a) = b$.
 
-## More mechanization
+## More Mechanization
 
 Now that we have a struct that can be parsed and printed to stdout, we can manipulate the trace records in more interesting ways. For example, we can unique and sort by instruction-pointer! Instead of keeping every instance of each instruction in the trace as we execute the program, we can create the one "canonical" trace for each instruction. This reduces a 100MB file to 44KB. Now we have a much more manageable diff to pour over, and trace-diverging is no longer really a problem &mdash; we can just skip over any immediate dependencies of these instructions that load PPU state.
 
@@ -251,7 +251,7 @@ The data at `$d81d` is different in the two traces!
 
 Now we have something to work with. We can instrument the implementation with hooks to dump instruction-pointers when this address is poked, and finally lead us to the root cause.
 
-## The root cause
+## The Root Cause
 
 With this information, single stepping this function on my emulator and a known good one, BGB, lead us to the inconsistency.
 
