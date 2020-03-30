@@ -70,6 +70,12 @@ class ExampleClass a where
   read1 :: a -> String
 ```
 
+```fsharp
+type ExampleInterface<'a> =
+    abstract member create : string -> 'a
+    abstract member read   : 'a -> string
+```
+
 </MultiCodeBlock>
 
 ### Implementation
@@ -140,6 +146,13 @@ instance ExampleClass String where
   read1 = id
 ```
 
+```fsharp
+type Example () =
+    interface ExampleInterface<string> with
+        member _.create s = s
+        member _.read s = s
+```
+
 </MultiCodeBlock>
 
 ### Client
@@ -187,6 +200,12 @@ client :: ExampleClass e => IO ()
 client = do
   let ex = create "hello"
   print $ read1 ex
+```
+
+```fsharp
+let E = Example () :> ExampleInterface<string>
+let ex = E.create "hello"
+E.read ex |> printf "%s\n"
 ```
 
 </MultiCodeBlock>
@@ -249,6 +268,10 @@ fn length<A>(es: &Vec<A>) -> Int {
 ```haskell
 length :: List a -> Int
 length = L.length
+```
+
+```fsharp
+let length<'a> (es: 'a list): int = es.Length
 ```
 
 </MultiCodeBlock>
@@ -416,6 +439,22 @@ instance StackClass Stack where
   pop (Stack (def, e::es)) = (e, Stack (def, es))
 ```
 
+```fsharp
+type StackInterface<'a> =
+    abstract member create : int -> 'a
+    abstract member push   : 'a -> int -> 'a
+    abstract member pop    : 'a -> int * 'a
+
+type Stack () =
+    interface StackInterface<int list * int> with
+        member _.create i = [], i
+        member _.push ((s, def): int list * int) i = i::s, def
+        member _.pop x =
+            match x with
+            | [], def -> def, ([], def)
+            | x::xs, def -> x, (xs, def)
+```
+
 </MultiCodeBlock>
 
 When implementing our functions we have the liberty to rely on the concrete type. Essentially, the self is a parameter for some of these functions. The self passing is implicit in many languages, but, interestingly, very explicit in Rust. In contrast, users of our interface, callers of create, push, and pop, are constrained to not be able to rely on the concrete type of the stack.
@@ -490,6 +529,12 @@ class ExampleClass a where
   read1 :: a -> String
 ```
 
+```fsharp
+type ExampleInterface<'a> =
+    abstract member create : string -> 'a
+    abstract member read   : 'a -> string
+```
+
 </MultiCodeBlock>
 
 <MultiCodeBlock>
@@ -558,6 +603,13 @@ instance ExampleClass String where
   read1 = id
 ```
 
+```fsharp
+type Example () =
+    interface ExampleInterface<string> with
+        member _.create s = s
+        member _.read s = s
+```
+
 </MultiCodeBlock>
 
 <MultiCodeBlock>
@@ -594,6 +646,12 @@ println!("{:}", ex.read());
 -- ...  do
   let ex = create "hello"
   print $ read1 ex
+```
+
+```fsharp
+let E = Example () :> ExampleInterface<string>
+let ex = E.create "hello"
+E.read ex |> printf "%s\n"
 ```
 
 </MultiCodeBlock>
@@ -735,6 +793,13 @@ acceptTau :: Tau t => t -> String
 acceptTau t = name t
 ```
 
+```fsharp
+type Tau<'a> =
+    abstract member name : 'a -> string
+
+let acceptTau<'a>(tau: Tau<'a>) = tau.name
+```
+
 </MultiCodeBlock>
 
 This property provides many interesting capabilities that we won't enumerate in full. Here's just one: Coupled with the rule restricting the existentially quantified $t$ from appearing in the result of client functions, we can use the first-classed-ness to allow for the unification of disparate concrete types in branches as long as they pack to the same interface. Our machines use dynamic dispatch to make this work at runtime.
@@ -805,6 +870,27 @@ fn myPet(preference: Preference) -> Box<dyn Animal> {
 -- We can do this in Haskell, but we'll need to use tools on top of Rank2 types
 -- which will be explained later. For the curious, you can achieve this with
 -- GADTs
+```
+
+```fsharp
+type Animal = interface end
+
+type Dog () =
+    class
+        interface Animal
+    end
+
+type Cat () =
+    class
+        interface Animal
+    end
+
+type Preference = Active | Passive
+
+let myPet (preference: Preference): Animal =
+    match preference with
+    | Active -> Dog () :> Animal
+    | Passive -> Cat () :> Animal
 ```
 
 </MultiCodeBlock>
@@ -972,6 +1058,18 @@ fn upcastStackIterator<S: StackProtocol, I: Iterator>(s: S) -> I where I.Contain
 -- which is omitted here
 ```
 
+```fsharp
+type IteratorInterface<'a> =
+    abstract member next : 'a -> int * 'a
+
+type StackIterator<'a> (stack: StackInterface<'a>) =
+    interface IteratorInterface<'a> with
+        member _.next x = stack.pop x
+
+let upcast_stack_iterator (stack: StackInterface<'a>) : IteratorInterface<'a> =
+    StackIterator stack :> IteratorInterface<'a>
+```
+
 </MultiCodeBlock>
 
 ### Extension
@@ -1036,6 +1134,16 @@ impl StackTrait {
 -- typeclasses
 class StackClass s => PeekingStack s where
   peek s = snd (pop s)
+```
+
+```fsharp
+type PeekingStack<'a> (stack: StackInterface<'a>) =
+    interface StackInterface<'a> with
+        member _.create i = stack.create i
+        member _.push x i = stack.push x i
+        member _.pop x = stack.pop x
+
+    member _.peek s = snd (stack.pop s)
 ```
 
 </MultiCodeBlock>
@@ -1151,6 +1259,24 @@ impl PushPop for SimpleStack { }
 -- two typeclasses. Please open a PR to show me if it's true!
 ```
 
+```fsharp
+type Push =
+    abstract member push : 'a -> int -> 'a
+
+type Pop =
+    abstract member pop : 'a -> int * 'a
+
+type PushPop =
+    inherit Push
+    inherit Pop
+    
+type ComposedPushPop (pushAndPop: Push * Pop) =
+    let push, pop = pushAndPop
+    interface PushPop with
+        member _.push x i = push.push x i
+        member _.pop x = pop.pop x
+```
+
 </MultiCodeBlock>
 
 ## Existential Types As Rank2 Universal Types
@@ -1199,6 +1325,10 @@ rank2sample f x y = f x y
 
 -- we can also use rank2 types in type declarations
 newtype Foo = Foo (forall b. b -> b -> b)
+```
+
+```fsharp
+(* F# doesn't support Rank2 types *)
 ```
 
 </MultiCodeBlock>
