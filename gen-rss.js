@@ -15,6 +15,12 @@ const _HalfImageWrapper = HalfImageWrapper;
 const MultiCodeBlock = function({children}) { return children; };
 const _MultiCodeBlock = MultiCodeBlock;
 
+const GameboyView = function({children}) { return children; };
+const _GameboyView = GameboyView;
+
+const Tower = function({children}) { return children; };
+const _Tower = Tower;
+
 function requireFromStringSync(src, filename) {
   const Module = module.constructor;
   const m = new Module();
@@ -97,7 +103,9 @@ function readPostMetadata(postPath) {
       React.createElement(mdxReact.MDXProvider, [], mod.default({
         components : {
           "HalfImageWrapper" : HalfImageWrapper,
-          "MultiCodeBlock" : MultiCodeBlock
+          "MultiCodeBlock" : MultiCodeBlock,
+          "GameboyView" : GameboyView,
+          "Tower" : Tower
         }
       })));
   const {meta} = mod;

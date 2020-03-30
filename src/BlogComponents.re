@@ -207,7 +207,7 @@ module Ol = {
     });
   module R = {
     [@react.component]
-    let make = (~children) => {
+    let make = (~className_="", ~children) => {
       let withBackRefIn:
         option(
           (. ((. React.element, string) => React.element)) => React.element,
@@ -243,7 +243,7 @@ module Ol = {
               const nextChildrenLength = child.props.children.length;
               return (
                  React.createElement("li",
-                                     { "id": child.props.id },
+                                     { "id": child.props.id, "key": child.props.id },
                  child.props.children.map((inner, i) => {
                   if (i === nextChildrenLength-1) {
                     return f(inner.props.children, inner.props.href);
@@ -260,7 +260,7 @@ module Ol = {
       ];
       switch (withBackRefIn) {
       | Some(f) =>
-        <ol className>
+        <ol className=merge([className, className_])>
           {f(. (. content, href) =>
              <span
                className={style([
@@ -365,3 +365,27 @@ module P = {
     };
   };
 };
+
+module Blockquote = {
+  let bar =
+    style([
+      display(`flex),
+      before([
+        unsafe("content", "'.'"),
+        width(`rem(0.625)),
+        flex(`none),
+        display(`block),
+        backgroundColor(Style.Colors.navy(0.25)),
+        marginRight(`rem(1.)),
+        marginBottom(`rem(1.5)),
+      ]),
+    ]);
+
+  include Wrap({
+    let className = bodyStyle;
+    let element =
+      <div className=bar>
+        <blockquote className />
+      </div>
+  });
+}

@@ -24,6 +24,7 @@ module Language = {
     | "language-typescript" => `Typescript
     | "language-rust" => `Rust
     | "language-kotlin" => `Kotlin
+    | "language-fsharp" => `Fsharp
     | x => failwith("Unhandled language in MultiCodeBlock: " ++ x)
     };
   };
@@ -38,6 +39,7 @@ module Language = {
     | `Kotlin => "Kotlin"
     | `Typescript => "TypeScript"
     | `Rust => "Rust"
+    | `Fsharp => "F#"
     };
   };
 };
@@ -134,6 +136,7 @@ module TabSelect = {
     [@react.component]
     let make = (~name, ~checked, ~onClick) => {
       <label
+        key=name
         className={Css.style(
           if (checked) {
             [Css.zIndex(10)];
