@@ -18,6 +18,9 @@ const _MultiCodeBlock = MultiCodeBlock;
 const GameboyView = function({children}) { return children; };
 const _GameboyView = GameboyView;
 
+const Tower = function({children}) { return children; };
+const _Tower = Tower;
+
 function requireFromStringSync(src, filename) {
   const Module = module.constructor;
   const m = new Module();
@@ -101,7 +104,8 @@ function readPostMetadata(postPath) {
         components : {
           "HalfImageWrapper" : HalfImageWrapper,
           "MultiCodeBlock" : MultiCodeBlock,
-          "GameboyView" : GameboyView
+          "GameboyView" : GameboyView,
+          "Tower" : Tower
         }
       })));
   const {meta} = mod;

@@ -136,6 +136,7 @@ module TabSelect = {
     [@react.component]
     let make = (~name, ~checked, ~onClick) => {
       <label
+        key=name
         className={Css.style(
           if (checked) {
             [Css.zIndex(10)];
