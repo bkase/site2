@@ -663,8 +663,9 @@ function acceptTau(t: Tau): string {
 ```
 
 ```ocaml
-(* OCaml is the only language that can properly express first class
- * implementations anonymously. We do so via the first-class module approach. *)
+(* OCaml and ReasonML are the only languages that can properly express first
+ * class implementations anonymously. We do so via the first-class module
+ * approach. *)
 
 (* interfaces are explicitly declared *)
 module type Tau = sig
@@ -780,7 +781,7 @@ function myPet(preference: Preference): Animal {
 ```
 
 ```ocaml
-(* We can do this in OCaml using first-class modules *)
+(* We can do this in OCaml and ReasonML using first-class modules *)
 let my_pet : Preference.t -> (module Animal_intf) = function
   | Active -> (module Dog : Animal_intf)
   | Passive -> (module Cat : Animal_intf)
@@ -903,8 +904,8 @@ function upcast_stack_iterator<S extends StackInterface>(s: S): Iterator1 {
 ```
 
 ```ocaml
-(* OCaml's first-class modules let us upcast without needing to muck with any
- * extra named data types *)
+(* OCaml's and ReasonML's first-class modules let us upcast without needing to
+ * muck with any extra named data types *)
 
 module type Iterator_intf = sig
   type t
@@ -1174,8 +1175,8 @@ It is surprisingly possible to represent the existential abstract data types ent
 ```
 
 ```ocaml
-(* OCaml supports Rank2 types, but only if they are located inside of data types
- * either inside a record or a GADT *)
+(* OCaml and ReasonML support Rank2 types, but only if they are located inside
+ * of data types either inside a record or a GADT *)
 
 (* The user of rank2record picks the 'a *)
 type rank2record = { foo: 'a. 'a -> 'a -> 'a }
@@ -1274,9 +1275,11 @@ Data abstraction helps us work on large codebases with ourselves and others by g
 
 Next time, we'll cover the part of the tower on lawful interfaces. We'll dig into representation independence and discuss mechanically discovering laws associated with interfaces. Plus how those laws guide us towards nice property-based tests for our code. Thus, granting us the courage within us to refactor without fear.
 
+Thank you [Chris Eidhof](https://twitter.com/chriseidhof) and [Daira Hopwood](https://twitter.com/feministPLT) for pointing out some mistakes in early versions of this post!
+
 ### Sources
 
-I heavily relied on Mitchell and Plotkin's "Abstract Types Have Existential Type" and Chapter 17 of Practical Foundations of Programming Languages (PFPL) by Bob Harper, and, of course, Wikipedia when writing this post. "Abstract Types Have Existential Type" more thoroughly talks through the different forms of composition and power abstract types have and PFPL introduces the existential, pack, and open syntactic forms, shows typing rules and provides one take on the representability with rank-2 types. I intended to repackage these pieces of information in a simplified manner and reflecting on how this theory manifests within mainstream programming languages. If you want to learn more, I reccommend reviewing these sources.
+I heavily relied on Mitchell and Plotkin's "Abstract Types Have Existential Type" and Chapter 17 of Practical Foundations of Programming Languages (PFPL) by Bob Harper, and, of course, Wikipedia when writing this post. "Abstract Types Have Existential Type" more thoroughly talks through the different forms of composition and power abstract types have and PFPL introduces the existential, pack, and open syntactic forms, shows typing rules and provides one take on the representability with rank-2 types. I intended to repackage these pieces of information in a simplified manner and reflecting on how this theory manifests within mainstream programming languages. If you want to learn more, I recommend reviewing these sources.
 
 [^1]: I squeezed a lot into this metaphor. Think of people on a team as threads. Even in a single-threaded system, concurrency is useful, when working with slow IO for example, and with the right tools, it is manageable. The prudent use of interfaces makes it easier to work with other people or switch between code even on a solo project.
 [^2]: Pun intended.
