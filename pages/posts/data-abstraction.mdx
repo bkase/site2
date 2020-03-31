@@ -794,9 +794,13 @@ acceptTau t = name t
 ```
 
 ```fsharp
+(* In F#, implementations are not first class *)
+
+(* interfaces are explicitly declared *)
 type Tau<'a> =
     abstract member name : 'a -> string
 
+(* we can accept packed implementations as arguments *)
 let acceptTau<'a>(tau: Tau<'a>) = tau.name
 ```
 
@@ -1059,6 +1063,8 @@ fn upcastStackIterator<S: StackProtocol, I: Iterator>(s: S) -> I where I.Contain
 ```
 
 ```fsharp
+(* We can upcast with a function if we introduce the intermediate type *)
+
 type IteratorInterface<'a> =
     abstract member next : 'a -> int * 'a
 
@@ -1137,6 +1143,7 @@ class StackClass s => PeekingStack s where
 ```
 
 ```fsharp
+(* Extension can be achieved by adding a member *)
 type PeekingStack<'a> (stack: StackInterface<'a>) =
     interface StackInterface<'a> with
         member _.create i = stack.create i
@@ -1260,6 +1267,10 @@ impl PushPop for SimpleStack { }
 ```
 
 ```fsharp
+(* We can combine packed interfaces with first-class interfaces.
+ *
+ * We can also compose interfaces by inheriting abstract members. *)
+
 type Push =
     abstract member push : 'a -> int -> 'a
 
@@ -1328,7 +1339,9 @@ newtype Foo = Foo (forall b. b -> b -> b)
 ```
 
 ```fsharp
-(* F# doesn't support Rank2 types *)
+(* F# only supports Rank2 types via anonymously implementing an interface. See
+ * https://stackoverflow.com/questions/7213599/generic-higher-order-function/7221589#7221589
+ *)
 ```
 
 </MultiCodeBlock>
