@@ -1,0 +1,202 @@
+import Page from '@reason/pages/Posts.bs'; export default Page;
+
+export const meta = {
+  date: 1588308212259,
+  description: "System-F, the core theory that underlies the idealized data abstraction that I described in \"Data Abstraction: Theory and Practice\", also underlies Dhall, a programmable configuration language. Thus, it's pretty straightforward to translate it into executable Dhall code. This post serves three purposes: (1) Dhall coders can use techniques shown here to tame complexity through data abstraction. (2) Scholars seeking to understand idealized data abstraction can use this executable description as the further exposition of the concepts introduced in the first post. (3) I, Brandon, can use this prose to express my excitement over some very cool code.",
+};
+
+# Data Abstraction in Dhall
+
+System-F[^1], the core theory that underlies the idealized data abstraction that I described in [Data Abstraction: Theory and Practice](/posts/data-abstraction), also underlies [Dhall](https://dhall-lang.org/), a programmable configuration language. Thus, it's pretty straightforward to translate it into executable Dhall code. This post serves three purposes: (1) Dhall coders can use techniques shown here to tame complexity through data abstraction. (2) Scholars seeking to understand idealized data abstraction can use this executable description as the further exposition of the concepts introduced in the first post. (3) I, Brandon, can use this prose to express my excitement over some very cool code.
+
+## Background
+
+"Dhall is a programmable configuration language that you can think of as: JSON + functions + types + imports"[^2]. For the functional programming enthusiasts, you can think of it as literally "System-Fω[^3] with records" and a little syntactic sugar on top. In other words, it's a well-designed programming language to replace the mess that is templated YAML or JSON. Dhall compiles into YAML or JSON (and Nix and Bash and a few other things) in the same way are existing template expanders compile templated YAML into YAML.
+
+Since idealized data abstraction using the "Existential Types As Rank2 Universal Types" interpretation [as described in my last post](/posts/data-abstraction) is implementable in pure System-F, I realized it would be pretty easy to translate it to Dhall.
+
+## Translation
+
+I created a GitHub repo, [abstraction](https://github.com/bkase/abstraction), that houses a collection of the code shown below. It builds and runs with Dhall v1.30.0.
+
+### Types
+
+Before we begin to describe any particular interfaces, clients, and implementations, let's consider the type of these pieces.
+
+Let's make a file `Existential.dhall`.
+
+Given some specific "interface" $\tau$:
+
+```haskell
+\(tau : Type -> Type) ->  -- ...
+```
+
+Clients consume arbitrary implementations of our interface $t. \tau$ and return some other arbitrary result $u$ specific to our choice of client. Dhall has no type inference so we are explicit with our type-lambda for $u$.
+
+```haskell
+let Client
+    : Type -> Type
+    = \(u : Type) -> forall(t : Type) -> tau t -> u
+```
+
+We wish to describe $\exists t. \tau$, the type of erased packed implementations. In the last [data abstraction post](/posts/data-abstraction), we discussed that in the Rank2 interpretation existentials are the type of a machine that takes a client and runs it on the concrete $t$ to produce our arbitrary $u$ value.
+
+```haskell
+let ExistsTau
+    : Type
+    = forall(u : Type) -> Client u -> u
+```
+
+Finally, we can return these types in a record
+
+```haskell
+in  { Impl = ExistsTau, Client = Client }
+```
+
+This expression's type captures the input $t.\tau$ and this record.
+
+```haskell
+: (Type -> Type) -> { Impl : Type, Client : Type -> Type }
+```
+
+These types are reusable in any place we wish to use data abstraction in Dhall programs.
+
+### Stack
+
+We'll describe and implement the same example as we discussed in the blog&nbsp;post.
+
+In a file `Stack.dhall`:
+
+```haskell
+-- An infinite stack interface and implementation
+```
+
+First let's import the Prelude, Dhall's standard library.
+
+```haskell
+let Prelude =
+      https://prelude.dhall-lang.org/v15.0.0/package.dhall sha256:6b90326dc39ab738d7ed87b970ba675c496bed0194071b332840a87261649dcd
+```
+
+And the file we made above.
+
+```haskell
+let Existential = ./Existential.dhall
+```
+
+Now we can describe the infinite stack interface.
+
+```haskell
+let Interface
+    : Type -> Type
+    =   \(t : Type)
+     -> { create : Natural -> t
+        , push : Natural -> t -> t
+        , pop : t -> { x : Natural, rest : t }
+        }
+```
+
+Feeding this interface into `Existential` gives us back the type for packed implementations and clients
+
+```haskell
+let e = Existential Interface
+
+let Impl = e.Impl
+
+let Client = e.Client
+```
+
+Let's choose a simple implementation. A `default` if the stack would otherwise be empty and a list `xs` to represent the stack when it's not empty.
+
+```haskell
+let Stack = { default : Natural, xs : List Natural }
+```
+
+Now, we write the implementation of our interface using this concrete implementation. It is the engine that feeds a client the concrete stack implementation.
+
+```haskell
+let StackImpl
+    : Impl
+    =   \(u : Type)
+     -> \(x : Client u)
+     -> x
+          Stack
+          { create = \(i : Natural) -> { default = i, xs = [] : List Natural }
+          , push = \(i : Natural) -> \(t : Stack) -> t // { xs = [ i ] # t.xs }
+          , pop =
+                \(t : Stack)
+             -> { x =
+                    Prelude.Optional.fold
+                      Natural
+                      (Prelude.List.head Natural t.xs)
+                      Natural
+                      (\(x : Natural) -> x)
+                      t.default
+                , rest =
+                    { default = t.default
+                    , xs = Prelude.List.drop 1 Natural t.xs
+                    }
+                }
+          }
+```
+
+Finally, we return the interface, our concrete implementation, and the client
+type.
+
+```haskell
+in    { Interface = Interface, Impl = StackImpl, Client = Client }
+    : { Interface : Type -> Type, Impl : Impl, Client : Type -> Type }
+```
+
+The interface can be reused to build other implementations and the client type can be used for any consumers of this implementation or any others.
+
+### Client
+
+We first import our interface, implementation, and client type.
+
+```haskell
+let Stack = ./Stack.dhall
+```
+
+Clients can't depend on any particular implementation of `Stack`. They act on the interface. The following client creates a stack and pushes a few things then pops once and returns the value.
+
+```haskell
+let stackClient
+    : Stack.Client Natural
+    =   \(t : Type)
+     -> \(stack : Stack.Interface t)
+     -> let s = stack.create 10
+
+        let s = stack.push 1 s
+
+        let s = stack.push 2 s
+
+        let y = stack.pop s
+
+        in  y.x
+```
+
+We can run our client by feeding it to some particular implementation
+
+```haskell
+in  Stack.Impl Natural stackClient
+```
+
+When we execute `Client.dhall` we get `2` as expected.
+
+```bash
+$ dhall <<< './Client.dhall'
+2
+```
+
+## That's Not All
+
+Implementations as values, upcasting, extension, and interface composition are all directly expressible by translating almost literally character-by-character from their latex System-F representation to Dhall. I cover each of these capabilities in the [last post](/posts/data-abstraction).
+
+## Conclusion
+
+Since System-F powers both idealized data abstraction and Dhall, we can describe these primitives directly in Dhall. Regardless of whether you've used this post to learn a new capability of Dhall, to further study information hiding and encapsulation, or to indulge my insatiable need to share in that which I am interested, feel free to send me a tweet with any feedback, corrections, or comments to [@bkase_](https://twitter.com/bkase_).
+
+[^1]: System-F is a typed lambda calculus with scoped universal quantification. In other words, we can mix $\forall$s with our $\lambda$s.
+[^2]: Quote from the Dhall website
+[^3]: System-Fω adds dependent typing to System-F.
