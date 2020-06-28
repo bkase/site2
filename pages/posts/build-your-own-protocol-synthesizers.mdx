@@ -1,0 +1,370 @@
+import Page from '@reason/pages/Posts.bs'; export default Page;
+
+export const meta = {
+  date: 1593229117217,
+  description: "In Swift, certain protocols are imbued with special powers -- conformance can be synthesized for you. For example, when conforming any struct or enum where all fields are composed of `Equatable` values to `Equatable`, implementation of `==` is derived for you[^1]. This is a great way to reduce boilerplate, error-prone, boring code. But we're at the whims of the compiler authors! Codable conformance synthesis, for example, doesn't support enums with associated data types or tuples! What about new protocols? What if we want to synthesize a type-safe form view for arbitrary structs and enums composed of primitives that conform? In this post, we'll do both. And we'll do it without code generation. Secretly, I'll trick you into learning a touch of interesting theory in the process that will be applicable not just while you write Swift, but long after as well."
+};
+
+
+# Build Your Own Protocol Synthesizers
+
+In Swift, certain protocols are imbued with special powers &mdash; conformance can be synthesized for you. For example, when conforming any struct or enum where all fields are composed of `Equatable` values to `Equatable`, implementation of `==` is derived for you[^1]. This is a great way to reduce boilerplate, error-prone, boring code. But we're at the whims of the compiler authors! Codable conformance synthesis, for example, doesn't support enums with associated data types or tuples! What about new protocols? What if we want to synthesize a type-safe form view for arbitrary structs and enums composed of primitives that conform?
+
+In this post, we'll do both. And we'll do it without code generation. Secretly, I'll trick you into learning a touch of interesting theory in the process that will be applicable not just while you write Swift, but long after as well.
+
+
+## Strategy
+
+To "synthesize" conformances for protocols we'll project our concrete type into and/or out of a shared structurally anonymous form. Since it's shared between any concrete types we'll only have to write our conformance once for each type of structure we run into in the wild.
+
+Similar to how parametric polymorphism[^2] enables operation on different concrete datatypes via abstracting over structure, this approach known as datatype-generic programming enables operation on the structure itself by abstracting over names.
+
+## Discovering Structural Anonymity
+
+Our goal is to synthesize protocols for arbitrary nestings of structs and enums with associated types. Thus, we should study the structure of structs and enums.
+
+### Structs
+
+Consider the following two definitions of a `Coordinate`:
+
+```swift
+type Coordinate = (Int, Int)
+```
+
+```swift
+struct Coordinate {
+  var x: Int
+  var y: Int
+}
+```
+
+Structurally, these are the same &mdash; two integers. In the algebra of data types[^3], we call this a product type.[^4] If I know how to manipulate an `Int` and how to manipulate a product of things, it makes sense that I should know how to manipulate both types of `Coordinate` above. More generally, if I have some product type $\pi$ conforming to a protocol $R$, then no matter what names we give $\pi$ or its constituents, we still conform to $R$.
+
+### Enums
+
+Swift is missing the dual of tuples &mdash; it doesn't have anonymous enums with associated types or variants[^5], so let's define one:
+
+```swift
+enum Either<A, B> {
+  case left(A)
+  case right(B)
+}
+```
+
+Consider the following two definitions of `Event`:
+
+```swift
+type Event = Either<String, Int>
+
+enum Event {
+  case newMessage(String)
+  case exit(status: Int)
+}
+```
+
+Structurally, these are the same &mdash; either a string or an integer. In the algebra of data types, we call this a sum type.[^6] If I know how to manipulate a `String` and an `Int`, and how to manipulate a sum of things, it makes sense I should know how to manipulate both types of Events above. More generally, if I have a sum type $\sigma$ conforming to a protocol $R$, then no matter what names we give $\sigma$ or its constituents, we still conform to $R$.
+
+### Flesh out the algebra
+
+If we have products and sums, we should also include zero and one! The algebra of data types tells us `Void` is one &mdash; its only inhabitant is `()`, and `Never`[^7] is zero &mdash; it has no inhabitants.[^8]
+
+## Extending Conformance Synthesis
+
+Our compositional units identified: Products, Sums, One, and Zero. If these primitives conform to our protocols half of the puzzle is solved. Afterward, we'll consider what mapping into and out-of these raw algebraic data type constructors could look like.
+
+### Make the unconformable conformable
+
+Unfortunately, in addition to our anonymous variant not existing in Swift, we also can't provide extensions on tuples or `Void`. We can fix all three of these problems by introducing new types:
+
+```swift
+// as defined above
+enum Either<A, B> { /* ... */ }
+
+// A nominal type for `Void`
+struct One {}
+
+struct Tuple<A, B> {
+  var a: A
+  var b: B
+}
+```
+
+### More than binary
+
+Structs can have more than two stored properties and enums can have more than two cases, but `Tuple` and `Either` are only defined over two types. How can we represent larger structs and enums? If you want to multiply more than two numbers, what do you do?
+
+```
+x * y * z
+```
+
+What happens if we use a `mul()` function rather than the infix `*` operator[^9]:
+
+```
+mul(x, mul(y, z))
+```
+
+Now, let's say `mul` is actually `Tuple`, our arguments are types, and application is constructing the type by feeding the types to the generic parameters!
+
+```swift
+Tuple<A, Tuple<B, C>>
+```
+
+We can use typealiases!
+
+```swift
+type Tuple3 = Tuple<A, Tuple<B, C>>
+type Tuple4 = Tuple<A, Tuple3<B, C, D>>
+// ... etc
+```
+
+We can also do the same thing for sums with `Either`:
+
+```swift
+type Either3 = Either<A, Either<B, C>>
+type Either4 = Either<A, Either3<B, C, D>>
+// ... etc
+```
+
+## Mapping to the structures
+
+Depending on the protocol, we may require projecting into anonymous sums and products or we may require injecting our structurally anonymous form into the concrete value. We'll use `sop` in our naming as a nod to the similar sum-of-products view of datatype generic programming where all data is anonymized as a sum of constructors over a product of arguments to those constructors.[^10]
+
+### Auto protocols
+
+To facilitate the synthesis of conformances we'll introduce an "auto" protocol that bridges the gap between our concrete type and the anonymized representation (denoted `sop` for reasons shared above).
+
+### Projection
+
+Let's extend the synthesizability of encodable:
+
+```swift
+protocol AutoEncodable : Encodable {
+  associatedtype Sop : Encodable
+
+  var sop : Sop { get }
+}
+```
+
+`AutoEncodable` extends `Encodable` and adds a computed property for the `sop` hose type is provided as an associated type. Remember, the `sop` value will be composed of products, sums, one, zero along with our base types.
+
+In order to get the Encodable conformance "for free" we can define encode in terms of the `sop` property:
+
+```swift
+extension AutoEncodable {
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(sop)
+    }
+}
+```
+
+Now as long as we provide `Encodable` instances for our anonymous algebraic-data-type combinators, we will be able to properly conform to `AutoEncodable`.
+
+```swift
+// Some of these Swift does synthesize for us
+extension Unit: Encodable {}
+extension Tuple: Encodable where A: Encodable, B: Encodable {}
+
+// Never is always easy to implement
+extension Never: Encodable {
+  func encode(to encoder: Encoder) throws {
+    fatalError("Never has no inhabitants")
+  }
+}
+
+extension Either: Encodable where A: Encodable, B: Encodable {
+  // Thanks objc.io folks for the Swift Tip
+  // https://www.objc.io/blog/2018/01/23/codable-enums/
+  func encode(to encoder: Encoder) throws {
+      // assume we also added CodingKeys to Either
+      var container = encoder.container(keyedBy: CodingKeys.self)
+      switch self {
+      case .left(let value):
+          try container.encode(value, forKey: .left)
+      case .right(let value):
+          try container.encode(value, forKey: .right)
+      }
+  }
+}
+```
+
+And that's it! Here's an example:
+
+```swift
+enum Example {
+    case a(Int, label: String)
+    case b
+    case c
+}
+
+extension Example : AutoEncodable {
+  typealias Sop = Either3<Tuple<Color, String>, One, One>
+
+  var sop: Sop {
+    get {
+      switch self {
+      case let .a(i, label):
+        return .left(Tuple(i, label))
+      case .b:
+        return .right(.left(One()))
+      case .c:
+        return .right(.right(One()))
+      }
+    }
+  }
+}
+```
+
+### Injecting
+
+Certain protocols demand a backward mapping &mdash; `Decodable` for example. In that case, we can add a new constructor.
+
+```swift
+protocol AutoDecodable : Decodable {
+  associatedtype Sop : Decodable
+
+  init(sop: Sop)
+}
+
+extension AutoDecodable {
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        self.init(sop: try container.decode(Sop.self))
+    }
+}
+```
+
+Decodable instances for our primitives are also similarly straightforward. Implementation is elided and left as an exercise for the reader.[^11]
+
+We can even compose these protocols to make `AutoCodable`.
+
+```swift
+protocol AutoCodable : AutoEncodable, AutoDecodable { }
+```
+
+Finally, for completeness, here is an `AutoDecodable` instance for our example:
+
+```swift
+extension Example : AutoDecodable {
+    init(sop: Sop) {
+      switch sop {
+      case let .left(x):
+        self = .a(x._0, label: x._1)
+      case .right(.left(_)):
+        self = .b
+      case .right(.right(_)):
+        self = .c
+    }
+}
+```
+
+`Example` is now `Codable` and `Decodable` &mdash; we can serialize and deserialize these values.  The best part: Once you implement both the `sop` constructor and computed property, any future synthesis is free. We'll see this with the next example.
+
+### Custom Protocols
+
+Let's create a new protocol, `Arbitrary`[^12], which lets us generate arbitrary values of some type
+
+```swift
+// Assume Gen<A> is a composable random number generator
+// for example https://github.com/pointfreeco/swift-gen
+
+protocol Arbitrary {
+  static var arbitrary : Gen<Self> { get }
+}
+```
+
+We'll need to construct an instance of `Self` from the `sop` values, so this will look similar to `Decodable`.
+
+First let's implement `Arbitrary` for some primitives:
+
+```swift
+extension Int {
+  static var arbitrary : Gen<Self> { Gen.int }
+}
+
+extension String {
+  static var arbitrary : Gen<String> { Gen.string }
+}
+```
+
+And for our product, sum, one, and zero types:
+
+```swift
+extension One {
+  static var arbitrary : Gen<One> { Gen.always(One()) }
+}
+
+extension Tuple where A: Arbitrary, B: Arbitrary {
+  static var arbitrary : Gen<Tuple<A, B>> {
+    Gen.zip(a.arbitrary, b.arbitrary).map { (a, b) in Tuple(a, b) }
+  }
+}
+
+extension Never {
+  static var arbitrary : Gen<Never> {
+    fatalError("Never has no inhabitants")
+  }
+}
+
+extension Either where A: Arbitrary, B: Arbitrary {
+  static var arbitrary : Gen<Either<A, B>> {
+    Gen.oneOf(a.arbitrary, b.arbitrary)
+  }
+}
+```
+
+Now we can implement `AutoArbitrary`:
+
+```swift
+protocol AutoArbitrary : Arbitrary {
+  associatedtype Sop : Arbitrary
+
+  init(sop: Sop)
+}
+
+extension AutoArbitrary {
+  static var arbitrary : Gen<Self> {
+    Gen<Sop>.map{ self.init(sop: $0) }
+  }
+}
+```
+
+And since our example is already `AutoDecodable`, we can make it also `AutoArbitrary` without any extra work!
+
+```swift
+extension Example : AutoArbitrary {}
+```
+
+`Example.arbitrary` will now produce a random generator of `Example`s!
+
+Moreover, as we make future changes to the type we only have to tweak the `Sop` associatedtype, the `init(sop: Sop)`, and `sop` computed properties. We automatically synthesize `Codable`, `Decodable`, and `Arbitrary` and anything else we want!
+
+## Protocol Synthesizers Synthesized
+
+Looking forward, one could imagine such power being builtin, but for now, no longer are we limited by the protocol conformance synthesis given to us by the Swift compiler. Through the power of datatype generic programming with a modified sum-of-products view with auto-protocols, we can imbue any existing or custom structurally-relevant protocol with synthesis power. This post was brought to you by my aversion to the boilerplate required to implement codable conformance for enums with associatedtypes.
+
+PS: Chris Eidhof and I talked about this a few years ago. Fun fact Chris's master's thesis was about datatype generic programming for UIs in Haskell (ask him about it!).
+
+[^1]: Learn more via Swift Evolution proposals [SE-0185](https://github.com/apple/swift-evolution/blob/74d62ec62b742848ee03005c478eccdc5f7d504d/proposals/0185-synthesize-equatable-hashable.md) and [SE-0266](https://github.com/apple/swift-evolution/blob/master/proposals/0266-synthesized-comparable-for-enumerations.md)
+
+[^2]: Known as "generics" in Swift
+
+[^3]: This post is not about algebraic data types, but they are very interesting! You can learn more on the [wikipedia page](https://en.wikipedia.org/wiki/Algebraic_data_type).
+
+[^4]: Product types are called as much as the number of values inhabiting the type of the product is the product of the number of inhabitants of the constituents. For example, `Bool x Int` has twice the number of inhabitants as `Int` as all ints will be enumerated twice, once when `_0` is `true` and once when it's `false`.
+
+[^5]: ReasonML/OCaml does, and it's amazing
+
+[^6]: Sum types are called as much as the number of values inhabiting the type of the sum is the sum of the number of inhabitants of the constituents. For example, `Bool + Int` is either false, true, or one of the integers. There are exactly 2 + number of ints inhabitants.
+
+[^7]: In most literature, you'll see what Swift calls `Void` called `Unit`, and what Swift calls `Never` called `Void`.
+
+[^8]: If you're new to this concept of algebraic datatypes, try constructing a product of `Never` and anything else &mdash; you can't; there are no inhabitants of that type! Zero times anything is zero! Zero annihilates over multiplication
+
+[^9]: Here we assume multiplication decomposes right-associatively. Multiplication of integers and of datatypes is associative, so our choice of associativity doesn't really matter here.
+
+[^10]: In Swift, value types are stratified between products (structs) and sums of products (enums), so _technically_ it's wrong to say we're always programming against sums of products.
+
+[^11]: As a reader, I usually find encountering an "exercise for the reader" annoying, but in this case it really is just noise in this post as the decodable conformances directly follow from the encodable onces. Remember to visit the [Codable Enums Swift Tip](https://www.objc.io/blog/2018/01/23/codable-enums/) for advice on `Decodable` for `Either`.
+
+[^12]: Adapted from [SwiftCheck](https://github.com/typelift/SwiftCheck)'s Aribitrary
