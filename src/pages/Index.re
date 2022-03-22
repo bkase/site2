@@ -153,12 +153,12 @@ let make = () => {
         </div>
         <div className=Style.body>
           <P className=Style.topP>
-            {s("Head of product engineering at o(1) labs, building the ")}
-            <A href="https://codaprotocol.com"> {s("coda protocol")} </A>
-            {s(".")}
+            {s("Architect and first engineer at O(1) labs, building ")}
+            <A href="https://minaprotocol.com"> {s("Mina Protocol")} </A>
+            {s(" since 2017. Currently focused on developer tooling for zkApps.")}
           </P>
           <P className=Style.innerP>
-            {s("Typed functional programming for life. Find me ")}
+            {s("Nights are for farming stablecoin yield. Typed functional programming for life. Find me ")}
             <A
               href="https://www.youtube.com/results?search_query=brandon+kase">
               {s("proselytizing")}
